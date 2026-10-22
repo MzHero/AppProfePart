@@ -239,7 +239,7 @@ body {
 }
 
 .tinder-img .badge-dist {
-  bottom: 4px;
+  bottom: 28px;
 }
 
 .tinder-body {
@@ -333,7 +333,7 @@ body {
 }
 
 .tinder-img .stars-container {
-  margin-bottom: 1px;
+  margin: 0 0 6px 6px;
 }
 
 .star {
