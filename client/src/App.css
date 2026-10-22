@@ -511,3 +511,45 @@ body {
   color: #ef4444;
   font-weight: 600;
 }
+/* Paleta */
+body { background: linear-gradient(160deg, #1e1b4b, #312e81); }
+
+.phone-container { background-color: #f5f3ff; border-color: #4338ca; }
+
+/* Textos de marca */
+.brand-header h2 { color: #6d28d9; }
+
+/* Barras superior e inferior */
+.top-search-bar,
+.bottom-tabs { background: #ffffff; border-color: #ede9fe; }
+.search-input-box { background: #f5f3ff; border-color: #ddd6fe; }
+
+/* Botón principal (coral, con degradé) */
+.btn-primary {
+  background: linear-gradient(135deg, #fb7185, #f43f5e);
+  box-shadow: 0 6px 14px rgba(244, 63, 94, 0.3);
+}
+.btn-floating-add {
+  background: linear-gradient(135deg, #fb7185, #f43f5e);
+  box-shadow: 0 6px 14px rgba(244, 63, 94, 0.4);
+}
+
+/* Chips y pestañas activas */
+.chip { border-color: #ddd6fe; color: #6d28d9; }
+.chip.active { background: #6d28d9; border-color: #6d28d9; color: #fff; }
+.tab-btn.active { color: #6d28d9; }
+
+/* Etiquetas de materias */
+.tag-subject { background: #ede9fe; color: #5b21b6; }
+
+/* Tarjetas */
+.grid-card,
+.tinder-card,
+.chat-item { background: #ffffff; border-color: #ede9fe; }
+.tinder-card { box-shadow: 0 12px 24px rgba(109, 40, 217, 0.12); }
+
+/* Avatares del chat */
+.avatar-circle { background: #ddd6fe; color: #5b21b6; }
+
+/* Botón de info sobre la foto */
+.btn-info-float { background: rgba(109, 40, 217, 0.85); }
