@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Search, SlidersHorizontal, MapPin, Heart, X, 
-  MessageCircle, User, ArrowLeft, Send, Sparkles, Plus, BookOpen
+  MessageCircle, User, ArrowLeft, Send, Sparkles, Plus, BookOpen, Info
 } from 'lucide-react';
 import './App.css';
 
@@ -14,6 +14,7 @@ const INITIAL_TUTORS = [
     subjects: ["Física I", "Química", "Matemática"],
     distance: 50,
     rate: 15,
+    rating: 4,
     cv: "Licenciado en Ciencias Físicas (UBA). 5 años dictando clases particulares y preparación para exámenes de ingreso.",
     bio: "Clases prácticas con resolución paso a paso de ejercicios.",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"
@@ -25,6 +26,7 @@ const INITIAL_TUTORS = [
     subjects: ["Cálculo", "Álgebra Lineal"],
     distance: 100,
     rate: 20,
+    rating: 5,
     cv: "Ingeniera Electrónica con posgrado en docencia universitaria.",
     bio: "Hago que las matemáticas difíciles se entiendan en la primera clase.",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400"
@@ -36,6 +38,7 @@ const INITIAL_TUTORS = [
     subjects: ["Inglés C1", "First Certificate"],
     distance: 200,
     rate: 18,
+    rating: 3,
     cv: "Profesor de lengua inglesa certificado por Cambridge.",
     bio: "Enfoque 100% conversacional e intensivo para entrevistas y exámenes.",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400"
@@ -53,6 +56,13 @@ export default function App() {
   const [swipeIndex, setSwipeIndex] = useState(0);
   const [maxDistance, setMaxDistance] = useState(500);
   const [searchQuery, setSearchQuery] = useState('');
+  // Función para renderizar estrellas 1-5 como íconos
+  const renderStars = (rating) => {
+    const full = '★'.repeat(rating);
+    const empty = '☆'.repeat(5 - rating);
+    return `${full}${empty}`;
+  };
+
   const [chats, setChats] = useState([
     { id: 1, name: "Martín Benítez", lastMsg: "Hola! ¿Cuándo te viene bien la clase?", time: "10:30" }
   ]);
@@ -63,17 +73,17 @@ export default function App() {
       <div className="phone-container">
         <div className="screen auth-screen">
           <div className="brand-header">
-            <h2>TutorMatch</h2>
+            <h2>Particuldando</h2>
             <p>Conecta con tu profesor ideal</p>
           </div>
           <div className="auth-form">
             <div className="input-group">
               <label>Usuario / Email</label>
-              <input type="text" placeholder="ej. alumno@mail.com" defaultValue="alumno123" />
+              <input type="text" placeholder="ej. alumno@mail.com" defaultValue="milton" />
             </div>
             <div className="input-group">
               <label>Contraseña</label>
-              <input type="password" placeholder="••••••••" defaultValue="secret" />
+              <input type="password" placeholder="123" defaultValue="secret" />
             </div>
             <button className="btn-primary" onClick={() => setCurrentScreen('grid')}>
               Ingresar
@@ -137,6 +147,9 @@ export default function App() {
                 }}
               >
                 <div className="grid-card-img" style={{ backgroundImage: `url(${tutor.avatar})` }}>
+                  <div className="stars-container">
+                    <span className="star">{renderStars(tutor.rating)}</span>
+                  </div>
                   <span className="badge-dist"><MapPin size={10} /> {tutor.distance}m</span>
                 </div>
                 <div className="grid-card-meta">
@@ -156,9 +169,15 @@ export default function App() {
             <div className="tinder-card">
               <div 
                 className="tinder-img" 
-                style={{ backgroundImage: `url(${tutors[swipeIndex].avatar})` }}
+                style={{ backgroundImage: `url(${tutors[swipeIndex].avatar})`, display: 'flex', alignItems: 'flex-end' }}
               >
                 <span className="badge-dist"><MapPin size={12} /> {tutors[swipeIndex].distance} mts</span>
+                <div className="stars-container">
+                  <span className="star">{renderStars(tutors[swipeIndex].rating)}</span>
+                </div>
+                  <button className="btn-info-float" title="Ver descripción" onClick={() => { setSelectedTutor(tutors[swipeIndex]); setCurrentScreen('detail'); }}>
+                    <Info size={16} />
+                  </button>
               </div>
               <div className="tinder-body">
                 <div className="tinder-row">
@@ -231,6 +250,10 @@ export default function App() {
               >
                 <Plus size={26} />
               </button>
+            </div>
+            
+            <div className="detail-stars">
+              <span className="star">{renderStars(selectedTutor.rating)}</span>
             </div>
             
             <div className="detail-content">

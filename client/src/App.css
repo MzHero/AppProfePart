@@ -238,6 +238,10 @@ body {
   position: relative;
 }
 
+.tinder-img .badge-dist {
+  bottom: 4px;
+}
+
 .tinder-body {
   padding: 16px;
 }
@@ -292,9 +296,58 @@ body {
   color: #ef4444;
 }
 
+.btn-info {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
 .btn-heart {
   background: #dcfce7;
   color: #10b981;
+}
+
+.btn-info-float {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(59, 130, 246, 0.8);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Estrellas de calificación */
+.stars-container {
+  display: flex;
+  gap: 1px;
+  margin-bottom: 1px;
+  font-size: 14px;
+  align-self: flex-end;
+}
+
+.tinder-img .stars-container {
+  margin-bottom: 1px;
+}
+
+.star {
+  color: #f59e0b; /* amarillo */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Estrellas en pantalla Detail - abajo de la imagen */
+.detail-stars {
+  font-size: 12px;
+  color: #f59e0b;
+  margin: 4px 0 0 0;
+  display: flex;
+  gap: 1px;
 }
 
 /* Detalle */
