@@ -1,4 +1,4 @@
-# CLAUDE.md — Particulando
+# CLAUDE.md — Particuldando
 
 App móvil (Android + iOS) que conecta **alumnos** con **profesores particulares**, con mecánica tipo Tinder:
 el alumno da like a un profesor → el profesor acepta o rechaza → si acepta se habilita el chat.
@@ -39,8 +39,8 @@ npx expo export --platform android --platform web   # verifica que el bundle com
 Antes de dar una tarea por terminada: `npm run typecheck && npm run lint`.
 
 Usuarios demo (mock, contraseña `123456`):
-- `alumno@particulando.com` — alumno con un chat aceptado (Martín).
-- `profe@particulando.com` — profesor (Martín Benítez) con una solicitud pendiente (Sofía).
+- `alumno@particuldando.com` — alumno con un chat aceptado (Martín).
+- `profe@particuldando.com` — profesor (Martín Benítez) con una solicitud pendiente (Sofía).
 
 Los datos mock viven en memoria: se reinician al recargar la app.
 
@@ -115,7 +115,7 @@ mobile/src/
 - **Splash e intro del login** (`components/brand.tsx`): el splash nativo es solo color de fondo
   (`splash-icon.png` transparente). Después `<BrandSplash>` muestra la "P" latiendo (mínimo `MIN_SPLASH_MS`)
   y al terminar de cargar le pasa la posta al login: su "P" se ubica en el mismo punto de la pantalla
-  (`measureInWindow`) y desde ahí se despliega "Particulando", sube y aparecen los inputs. Con sesión
+  (`measureInWindow`) y desde ahí se despliega "Particuldando", sube y aparecen los inputs. Con sesión
   iniciada, la P se desvanece. Respeta "reducir movimiento" del sistema. Si cambiás el tamaño o la fuente de
   la P, mantené `BRAND_TEXT` compartido entre ambas.
 - **Reanimated + React Compiler:** usar `shared.get()` / `shared.set()` (no `.value`) y `scheduleOnRN` de
@@ -184,7 +184,7 @@ Flutter.
 
 - Edad mínima / manejo de menores de edad.
 - Quién revisa los reportes y en qué plazo.
-- Logo y branding definitivos (el nombre ya está decidido: **Particulando**).
+- Logo y branding definitivos (el nombre ya está decidido: **Particuldando**).
 - Monetización futura.
 - Radios de distancia definitivos (hoy 50/100/200/500 m, tomados del prototipo).
 - Textos legales definitivos.

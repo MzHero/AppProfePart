@@ -1,4 +1,4 @@
-// Marca animada: pantalla de carga con la "P" latiendo y el logotipo "Particulando" que se
+// Marca animada: pantalla de carga con la "P" latiendo y el logotipo "Particuldando" que se
 // despliega desde esa P en el login.
 //
 // Secuencia al abrir la app:
@@ -38,7 +38,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { useAppTheme } from '@/providers/AppThemeProvider';
 
-export const BRAND_NAME = 'Particulando';
+export const BRAND_NAME = 'Particuldando';
 
 /** Mismo estilo para la P del splash y la del login: si difieren, se nota el "salto". */
 const BRAND_TEXT: TextStyle = {
@@ -146,7 +146,7 @@ export function BrandSplash({
         containerStyle,
       ]}
       accessible
-      accessibilityLabel="Cargando Particulando"
+      accessibilityLabel="Cargando Particuldando"
       onLayout={() => SplashScreen.hideAsync().catch(() => {})}>
       {/* La caja NO se escala: se mide sin que el latido afecte la posición. */}
       <View

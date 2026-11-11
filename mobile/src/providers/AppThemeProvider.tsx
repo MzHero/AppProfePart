@@ -20,7 +20,7 @@ import { palette, type ColorSchemeName, type ThemeColors } from '@/theme/palette
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
-const STORAGE_KEY = 'particulando.themePreference';
+const STORAGE_KEY = 'particuldando.themePreference';
 
 interface AppThemeValue {
   /** Lo que eligió el usuario. */

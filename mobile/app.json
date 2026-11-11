@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Particulando",
-    "slug": "particulando",
+    "name": "Particuldando",
+    "slug": "particuldando",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "particulando",
+    "scheme": "particuldando",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.particulando.app"
+      "bundleIdentifier": "com.particuldando.app"
     },
     "android": {
-      "package": "com.particulando.app",
+      "package": "com.particuldando.app",
       "adaptiveIcon": {
         "backgroundColor": "#F5F3FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -43,13 +43,13 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Particulando usa tu ubicación para mostrarte profesores cercanos. Nunca compartimos tu ubicación exacta."
+          "locationWhenInUsePermission": "Particuldando usa tu ubicación para mostrarte profesores cercanos. Nunca compartimos tu ubicación exacta."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Particulando necesita acceso a tus fotos para tu foto de perfil."
+          "photosPermission": "Particuldando necesita acceso a tus fotos para tu foto de perfil."
         }
       ]
     ],

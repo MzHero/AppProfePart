@@ -1,4 +1,4 @@
-﻿# AGENTS.md — Particulando
+﻿# AGENTS.md — Particuldando
 
 La documentación de contexto del proyecto está en [CLAUDE.md](CLAUDE.md) (arquitectura, convenciones,
 comandos y decisiones). Las reglas específicas de Expo están en [mobile/AGENTS.md](mobile/AGENTS.md).

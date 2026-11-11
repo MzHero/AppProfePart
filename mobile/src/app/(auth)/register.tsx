@@ -44,7 +44,7 @@ export default function RegisterScreen() {
         contentContainerClassName="gap-4 px-6 py-6"
         keyboardShouldPersistTaps="handled">
         <View className="gap-1.5">
-          <Text className="text-sm font-semibold text-fg">Quiero usar Particulando como</Text>
+          <Text className="text-sm font-semibold text-fg">Quiero usar Particuldando como</Text>
           <Controller
             control={control}
             name="role"

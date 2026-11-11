@@ -109,7 +109,7 @@ export default function LoginScreen() {
 
               {__DEV__ ? (
                 <Text className="mt-6 text-center text-xs text-fg-soft">
-                  Demo: alumno@particulando.com · profe@particulando.com (clave 123456)
+                  Demo: alumno@particuldando.com · profe@particuldando.com (clave 123456)
                 </Text>
               ) : null}
             </View>
