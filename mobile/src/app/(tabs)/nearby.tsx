@@ -1,4 +1,4 @@
-// Búsqueda por distancia y materia. Pantalla de referencia: "Images /pantalla_por_ubi.png"
+// Búsqueda por distancia y materia. Pantalla de referencia: "Images/pantalla_por_ubi.png"
 import { router } from 'expo-router';
 import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { useDeferredValue, useState } from 'react';

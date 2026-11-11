@@ -1,4 +1,4 @@
-// Lista de conversaciones. Pantalla de referencia: "Images /PantallaChat.png"
+// Lista de conversaciones. Pantalla de referencia: "Images/PantallaChat.png"
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Clock } from 'lucide-react-native';

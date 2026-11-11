@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { TeacherProfile } from '@/types/models';
 import { DistanceBadge, Stars, SubjectTag } from './ui';
 
-/** Tarjeta del mazo de swipe (ver "Images /Pantalla_swipe.png"). */
+/** Tarjeta del mazo de swipe (ver "Images/Pantalla_swipe.png"). */
 export function TeacherSwipeCard({
   teacher,
   onInfo,

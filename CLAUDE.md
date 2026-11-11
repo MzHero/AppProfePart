@@ -14,14 +14,14 @@ Idioma de la UI y del código de dominio: **español (rioplatense, voseo: "Ingre
 |---|---|
 | `mobile/` | **App real.** Expo SDK 58 + Expo Router + TypeScript + NativeWind. Todo el desarrollo nuevo va acá. |
 | `client/` | Prototipo web viejo (Vite + React, `App.jsx`). **Solo referencia visual**, no se desarrolla más. |
-| `Images /` | Capturas de referencia de cada pantalla (ojo: el nombre de la carpeta termina en **espacio**). |
+| `Images/` | Capturas de referencia de cada pantalla. |
 
 Pantallas de referencia → archivo que la implementa:
 
-- `Images /log.png` → `mobile/src/app/(auth)/login.tsx`
-- `Images /pantalla_por_ubi.png` → `mobile/src/app/(tabs)/nearby.tsx`
-- `Images /Pantalla_swipe.png` → `mobile/src/app/(tabs)/swipe.tsx` + `src/components/TeacherSwipeCard.tsx`
-- `Images /PantallaChat.png` → `mobile/src/app/(tabs)/chats.tsx`
+- `Images/log.png` → `mobile/src/app/(auth)/login.tsx`
+- `Images/pantalla_por_ubi.png` → `mobile/src/app/(tabs)/nearby.tsx`
+- `Images/Pantalla_swipe.png` → `mobile/src/app/(tabs)/swipe.tsx` + `src/components/TeacherSwipeCard.tsx`
+- `Images/PantallaChat.png` → `mobile/src/app/(tabs)/chats.tsx`
 
 ## Comandos (siempre desde `mobile/`)
 

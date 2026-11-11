@@ -7,4 +7,4 @@ Resumen:
 - La app real es `mobile/` (Expo SDK 58 + Expo Router + TypeScript + NativeWind). Los comandos se corren
   desde `mobile/`.
 - `client/` es el prototipo web viejo (Vite): solo referencia visual, no se desarrolla.
-- `Images /` (con espacio al final) tiene las capturas de referencia de cada pantalla.
+- `Images/` tiene las capturas de referencia de cada pantalla.

@@ -1,4 +1,4 @@
-// Pantalla de referencia: "Images /log.png"
+// Pantalla de referencia: "Images/log.png"
 // Entrada animada: el nombre se despliega desde la "P" de la pantalla de carga (ver components/brand.tsx).
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';

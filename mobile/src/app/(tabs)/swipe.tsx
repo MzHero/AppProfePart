@@ -1,4 +1,4 @@
-// Swipe estilo Tinder. Pantalla de referencia: "Images /Pantalla_swipe.png"
+// Swipe estilo Tinder. Pantalla de referencia: "Images/Pantalla_swipe.png"
 // Derecha = like (crea solicitud 'pending'), izquierda = descartar.
 import { router } from 'expo-router';
 import { Heart, X } from 'lucide-react-native';
