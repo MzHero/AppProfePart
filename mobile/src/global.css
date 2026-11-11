@@ -1,0 +1,43 @@
+/* ARCHIVO GENERADO por scripts/generate-theme-css.mjs — no editar a mano.
+   Los colores se cambian en src/theme/palette.ts y después: npm run theme */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-background: 245 243 255; /* #F5F3FF */
+  --color-surface: 255 255 255; /* #FFFFFF */
+  --color-muted: 245 243 255; /* #F5F3FF */
+  --color-brand-soft: 237 233 254; /* #EDE9FE */
+  --color-line: 226 232 240; /* #E2E8F0 */
+  --color-line-brand: 221 214 254; /* #DDD6FE */
+  --color-fg: 30 41 59; /* #1E293B */
+  --color-fg-muted: 100 116 139; /* #64748B */
+  --color-fg-soft: 148 163 184; /* #94A3B8 */
+  --color-brand: 109 40 217; /* #6D28D9 */
+  --color-brand-fg: 109 40 217; /* #6D28D9 */
+  --color-accent: 244 63 94; /* #F43F5E */
+  --color-accent-soft: 254 226 226; /* #FEE2E2 */
+  --color-success: 16 185 129; /* #10B981 */
+  --color-success-soft: 220 252 231; /* #DCFCE7 */
+  --color-star: 245 158 11; /* #F59E0B */
+}
+
+.dark:root {
+  --color-background: 15 12 29; /* #0F0C1D */
+  --color-surface: 26 22 48; /* #1A1630 */
+  --color-muted: 35 30 61; /* #231E3D */
+  --color-brand-soft: 45 36 87; /* #2D2457 */
+  --color-line: 46 41 80; /* #2E2950 */
+  --color-line-brand: 63 52 115; /* #3F3473 */
+  --color-fg: 241 240 250; /* #F1F0FA */
+  --color-fg-muted: 169 166 196; /* #A9A6C4 */
+  --color-fg-soft: 117 113 154; /* #75719A */
+  --color-brand: 139 92 246; /* #8B5CF6 */
+  --color-brand-fg: 196 181 253; /* #C4B5FD */
+  --color-accent: 244 63 94; /* #F43F5E */
+  --color-accent-soft: 63 22 37; /* #3F1625 */
+  --color-success: 52 211 153; /* #34D399 */
+  --color-success-soft: 14 47 36; /* #0E2F24 */
+  --color-star: 251 191 36; /* #FBBF24 */
+}

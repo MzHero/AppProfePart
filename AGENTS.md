@@ -1,37 +1,10 @@
-﻿# AGENTS.md — AppProfePart (client)
+﻿# AGENTS.md — Particulando
 
-## Project Overview
-React 18 + Vite 5 SPA for "Particuldando" — a tutor matching app (Spanish). Single-page app with mock data, no backend.
+La documentación de contexto del proyecto está en [CLAUDE.md](CLAUDE.md) (arquitectura, convenciones,
+comandos y decisiones). Las reglas específicas de Expo están en [mobile/AGENTS.md](mobile/AGENTS.md).
 
-## Commands
-```bash
-cd client
-npm run dev      # Start dev server
-npm run build    # Production build
-npm run preview  # Preview production build
-```
-
-## Structure
-```
-client/
-├── index.html          # Entry HTML (lang="es")
-├── src/
-│   ├── main.jsx        # React root mount
-│   ├── App.jsx         # All UI logic + mock data (320 lines)
-│   └── App.css         # Styles
-└── package.json        # Deps: react, react-dom, lucide-react
-```
-
-## Key Conventions
-- **No lint/typecheck/test configured** — none exist
-- **No vite.config.js** — uses Vite defaults
-- **All state in App.jsx** — screens managed via `currentScreen` state ('auth' | 'grid' | 'swipe' | 'detail' | 'chats')
-- **Mock data in INITIAL_TUTORS** — 3 tutors with distance-based filtering
-- **Icons from lucide-react** — imported individually
-- **Spanish UI strings** — no i18n setup
-
-## Gotchas
-- `npm` commands must run from `client/` directory
-- No `.env` or config files — all defaults
-- Single component file (App.jsx) contains entire app logic
-- Distance filtering uses meters (50/100/200/500 chips)
+Resumen:
+- La app real es `mobile/` (Expo SDK 58 + Expo Router + TypeScript + NativeWind). Los comandos se corren
+  desde `mobile/`.
+- `client/` es el prototipo web viejo (Vite): solo referencia visual, no se desarrolla.
+- `Images /` (con espacio al final) tiene las capturas de referencia de cada pantalla.
