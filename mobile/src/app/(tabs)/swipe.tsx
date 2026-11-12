@@ -1,141 +1,141 @@
 // Swipe estilo Tinder. Pantalla de referencia: "Images/Pantalla_swipe.png"
 // Derecha = like (crea solicitud 'pending'), izquierda = descartar.
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Heart, X } from 'lucide-react-native';
-import { useRef, useState } from 'react';
-import { Alert, useWindowDimensions, View } from 'react-native';
-import Swiper from 'react-native-deck-swiper';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, View } from 'react-native';
 
+import { DiscoverIntroModal } from '@/components/DiscoverIntroModal';
+import { SwipeDeck, type SwipeDeckHandle } from '@/components/SwipeDeck';
 import { TeacherSwipeCard } from '@/components/TeacherSwipeCard';
 import { Button, EmptyState, ErrorState, LoadingView, RoundButton, Screen } from '@/components/ui';
 import { useLikeTeacher, usePassTeacher, useSwipeDeck } from '@/hooks/queries';
+import { useCurrentLocation } from '@/hooks/useCurrentLocation';
+import { getItem, setItem, storageKeys } from '@/lib/storage';
 import { useAppTheme } from '@/providers/AppThemeProvider';
 import type { TeacherProfile } from '@/types/models';
 
-const CARD_MARGIN = 16;
-/** Espacio reservado debajo de la tarjeta para los botones X / corazón. */
-const ACTIONS_HEIGHT = 112;
+/** Cuántas fotos de las próximas tarjetas se descargan por adelantado. */
+const PREFETCH = 6;
 
 export default function SwipeScreen() {
   const { colors } = useAppTheme();
-  const { data: deck, isLoading, isError, refetch } = useSwipeDeck();
+  const { coords, status: locationStatus } = useCurrentLocation();
+  const locating = locationStatus === 'loading';
+  const {
+    data: deck,
+    isLoading,
+    isError,
+    refetch,
+    dataUpdatedAt,
+  } = useSwipeDeck(coords, !locating);
   const like = useLikeTeacher();
   const pass = usePassTeacher();
-  const swiperRef = useRef<Swiper<TeacherProfile>>(null);
+  const deckRef = useRef<SwipeDeckHandle>(null);
   const [finished, setFinished] = useState(false);
-  const { height: windowHeight } = useWindowDimensions();
-  // El swiper calcula el alto de la tarjeta con la altura de la VENTANA:
-  //   alto = ventana - 2*margen - marginBottom
-  // Medimos el contenedor real (sin tab bar ni zona segura) para que la tarjeta
-  // termine justo encima de los botones.
-  const [containerHeight, setContainerHeight] = useState(0);
-  const swiperMarginBottom = windowHeight - containerHeight + ACTIONS_HEIGHT - CARD_MARGIN;
+  const [showIntro, setShowIntro] = useState(false);
 
-  if (isLoading) return <LoadingView />;
-  if (isError || !deck) return <ErrorState onRetry={refetch} />;
+  // Explicación de cómo funciona: solo la primera vez que se entra a Descubrir.
+  useEffect(() => {
+    getItem<boolean>(storageKeys.discoverIntroSeen).then((seen) => {
+      if (!seen) setShowIntro(true);
+    });
+  }, []);
+  const closeIntro = () => {
+    setShowIntro(false);
+    setItem(storageKeys.discoverIntroSeen, true);
+  };
+
+  // Las fotos de las primeras tarjetas se bajan ya, así el swipe no muestra huecos.
+  useEffect(() => {
+    const urls = (deck ?? [])
+      .slice(0, PREFETCH)
+      .map((t) => t.avatarUrl)
+      .filter((u): u is string => Boolean(u));
+    if (urls.length) Image.prefetch(urls).catch(() => {});
+  }, [deck]);
+
+  const onSwipe = useCallback(
+    (teacher: TeacherProfile, direction: 'left' | 'right') => {
+      // Sin cartel después de cada like: la explicación se muestra una sola vez al entrar.
+      if (direction === 'right') {
+        like.mutate(teacher.id, {
+          onError: (e) => Alert.alert('No se pudo enviar la solicitud', e.message),
+        });
+      } else {
+        pass.mutate(teacher.id);
+      }
+    },
+    [like, pass],
+  );
+  const onEmpty = useCallback(() => setFinished(true), []);
 
   const restart = () => {
     setFinished(false);
     refetch();
   };
 
-  if (deck.length === 0 || finished) {
-    return (
-      <Screen>
-        <EmptyState
-          title="No hay más profesores por ahora"
-          description="Volvé más tarde o buscá por materia en la pestaña Cercanos."
-          action={<Button label="Buscar de nuevo" variant="brand" onPress={restart} />}
-        />
-      </Screen>
+  let content;
+  if (locating || isLoading) {
+    content = <LoadingView />;
+  } else if (isError || !deck) {
+    content = <ErrorState onRetry={refetch} />;
+  } else if (deck.length === 0 || finished) {
+    content = (
+      <EmptyState
+        title="No hay más profesores por ahora"
+        description="Volvé más tarde o buscá por materia en la pestaña Cercanos."
+        action={<Button label="Buscar de nuevo" variant="brand" onPress={restart} />}
+      />
     );
-  }
-
-  const onLike = (index: number) => {
-    const teacher = deck[index];
-    like.mutate(teacher.id, {
-      onSuccess: () =>
-        Alert.alert(
-          'Solicitud enviada',
-          `${teacher.name} va a recibir tu solicitud. Cuando la acepte se habilita el chat.`,
-        ),
-      onError: (e) => Alert.alert('No se pudo enviar', e.message),
-    });
-  };
-
-  return (
-    <Screen>
-      <View className="flex-1" onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}>
-        {containerHeight > 0 ? (
-          <Swiper
-            ref={swiperRef}
-            cards={deck}
-            keyExtractor={(t) => t.id}
-            renderCard={(teacher) =>
-              teacher ? (
+  } else {
+    content = (
+      <>
+        <View className="flex-1 p-4">
+          {/* El mazo se posiciona absoluto: esta vista interna respeta el padding de afuera. */}
+          <View className="flex-1">
+            <SwipeDeck
+              // Un mazo nuevo (recarga o cambio de ubicación) arranca desde la primera tarjeta.
+              key={dataUpdatedAt}
+              ref={deckRef}
+              items={deck}
+              keyExtractor={(t) => t.id}
+              onSwipe={onSwipe}
+              onEmpty={onEmpty}
+              renderCard={(teacher) => (
                 <TeacherSwipeCard
                   teacher={teacher}
                   onInfo={() =>
                     router.push({ pathname: '/teacher/[id]', params: { id: teacher.id } })
                   }
                 />
-              ) : null
-            }
-            onSwipedRight={onLike}
-            onSwipedLeft={(i) => pass.mutate(deck[i].id)}
-            onSwipedAll={() => setFinished(true)}
-            verticalSwipe={false}
-            stackSize={2}
-            stackSeparation={0}
-            cardHorizontalMargin={CARD_MARGIN}
-            cardVerticalMargin={CARD_MARGIN}
-            marginBottom={swiperMarginBottom}
-            backgroundColor="transparent"
-            animateCardOpacity
-            overlayLabels={{
-              left: {
-                title: 'NO',
-                style: {
-                  label: {
-                    color: colors.accent,
-                    fontSize: 28,
-                    borderColor: colors.accent,
-                    borderWidth: 3,
-                  },
-                  wrapper: { alignItems: 'flex-end', marginTop: 24, marginLeft: -24 },
-                },
-              },
-              right: {
-                title: 'ME INTERESA',
-                style: {
-                  label: {
-                    color: colors.success,
-                    fontSize: 28,
-                    borderColor: colors.success,
-                    borderWidth: 3,
-                  },
-                  wrapper: { alignItems: 'flex-start', marginTop: 24, marginLeft: 24 },
-                },
-              },
-            }}
-          />
-        ) : null}
-      </View>
+              )}
+            />
+          </View>
+        </View>
+        <View className="flex-row justify-center gap-16 pb-6 pt-1">
+          <RoundButton
+            tone="danger"
+            accessibilityLabel="Descartar"
+            onPress={() => deckRef.current?.swipe('left')}>
+            <X size={32} color={colors.accent} />
+          </RoundButton>
+          <RoundButton
+            tone="success"
+            accessibilityLabel="Me interesa"
+            onPress={() => deckRef.current?.swipe('right')}>
+            <Heart size={32} color={colors.success} />
+          </RoundButton>
+        </View>
+      </>
+    );
+  }
 
-      <View className="absolute bottom-6 left-0 right-0 flex-row justify-center gap-16">
-        <RoundButton
-          tone="danger"
-          accessibilityLabel="Descartar"
-          onPress={() => swiperRef.current?.swipeLeft()}>
-          <X size={32} color={colors.accent} />
-        </RoundButton>
-        <RoundButton
-          tone="success"
-          accessibilityLabel="Me interesa"
-          onPress={() => swiperRef.current?.swipeRight()}>
-          <Heart size={32} color={colors.success} />
-        </RoundButton>
-      </View>
+  return (
+    <Screen>
+      {content}
+      <DiscoverIntroModal visible={showIntro} onClose={closeIntro} />
     </Screen>
   );
 }

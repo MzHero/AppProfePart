@@ -9,7 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReportBlockSheet } from '@/components/ReportBlockSheet';
 import { Button, ErrorState, LoadingView, Stars, SubjectTag } from '@/components/ui';
 import { useLikeTeacher, useOutgoingPending, useTeacher } from '@/hooks/queries';
-import { formatDistance } from '@/lib/format';
+import { useCurrentLocation } from '@/hooks/useCurrentLocation';
+import { formatDistance, formatRate } from '@/lib/format';
 import { useCurrentUser } from '@/providers/SessionProvider';
 import { useAppTheme } from '@/providers/AppThemeProvider';
 
@@ -18,12 +19,18 @@ export default function TeacherDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const user = useCurrentUser();
   const insets = useSafeAreaInsets();
-  const { data: teacher, isLoading, isError, refetch } = useTeacher(id);
+  const { coords, status: locationStatus } = useCurrentLocation();
+  const {
+    data: teacher,
+    isLoading,
+    isError,
+    refetch,
+  } = useTeacher(id, coords, locationStatus !== 'loading');
   const { data: pending } = useOutgoingPending();
   const like = useLikeTeacher();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  if (isLoading) return <LoadingView />;
+  if (isLoading || locationStatus === 'loading') return <LoadingView />;
   if (isError || !teacher)
     return <ErrorState message="Este perfil no está disponible." onRetry={refetch} />;
 
@@ -54,27 +61,35 @@ export default function TeacherDetailScreen() {
       <ScrollView
         className="flex-1 bg-surface"
         contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-        <Image
-          source={{ uri: teacher.avatarUrl }}
-          style={{ width: '100%', height: 320 }}
-          contentFit="cover"
-        />
+        <View className="bg-brand-soft">
+          <Image
+            source={teacher.avatarUrl ? { uri: teacher.avatarUrl } : undefined}
+            style={{ width: '100%', height: 320 }}
+            contentFit="cover"
+          />
+        </View>
 
         <View className="gap-5 p-5">
           <View className="gap-1">
             <Stars rating={teacher.rating} size="md" />
             <View className="flex-row items-baseline justify-between">
               <Text className="flex-1 text-2xl font-bold text-fg">
-                {teacher.name} ({teacher.age} años)
+                {teacher.age !== null ? `${teacher.name} (${teacher.age} años)` : teacher.name}
               </Text>
-              <Text className="text-xl font-bold text-success">${teacher.hourlyRate}/h</Text>
+              {formatRate(teacher.hourlyRate) ? (
+                <Text className="text-xl font-bold text-success">
+                  {formatRate(teacher.hourlyRate)}
+                </Text>
+              ) : null}
             </View>
-            <View className="flex-row items-center gap-1">
-              <MapPin size={16} color={colors.fgMuted} />
-              <Text className="text-sm text-fg-muted">
-                Aprox. a {formatDistance(teacher.distanceKm)} de vos
-              </Text>
-            </View>
+            {teacher.distanceKm !== null ? (
+              <View className="flex-row items-center gap-1">
+                <MapPin size={16} color={colors.fgMuted} />
+                <Text className="text-sm text-fg-muted">
+                  Aprox. a {formatDistance(teacher.distanceKm)} de vos
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           <Text className="text-base leading-6 text-fg">{teacher.bio}</Text>

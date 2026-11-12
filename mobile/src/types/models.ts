@@ -1,5 +1,5 @@
 // Modelos de dominio que consume la UI.
-// Cuando exista Supabase, los tipos de la base se generan con `supabase gen types typescript`
+// Los tipos de la base (services/supabase/database.types.ts) se generan con `npm run db:types`
 // y los servicios mapean filas de la base -> estos modelos. La UI nunca depende de los tipos de la base.
 
 export type Role = 'student' | 'teacher';
@@ -11,30 +11,37 @@ export interface User {
   email: string;
   avatarUrl?: string;
   bio?: string;
-  age?: number;
+  /** Fecha de nacimiento, formato ISO 'AAAA-MM-DD'. */
+  birthDate?: string;
   /** Solo profesores */
   subjects?: string[];
   hourlyRate?: number;
   cv?: string;
+  /** Solo profesores: si ya cargó su ubicación (sin ella no aparece en la búsqueda por distancia). */
+  hasLocation?: boolean;
 }
 
 /** Perfil público de un profesor, tal como lo ve un alumno. */
 export interface TeacherProfile {
   id: string;
   name: string;
-  age: number;
-  avatarUrl: string;
+  /** null si el profesor no cargó su fecha de nacimiento. */
+  age: number | null;
+  avatarUrl?: string;
   subjects: string[];
-  hourlyRate: number;
-  /** 0-5 */
+  /** null si el profesor no cargó precio. */
+  hourlyRate: number | null;
+  /** Promedio de reseñas, 0-5 (0 = sin reseñas). */
   rating: number;
+  reviewCount: number;
   bio: string;
   cv: string;
   /**
    * Distancia aproximada al usuario, en km.
-   * Regla de privacidad: el backend NUNCA devuelve coordenadas, solo esta distancia.
+   * Regla de privacidad: el backend NUNCA devuelve coordenadas, solo esta distancia (redondeada).
+   * null si no tenemos la ubicación del alumno o el profesor no cargó la suya.
    */
-  distanceKm: number;
+  distanceKm: number | null;
 }
 
 /** Datos mínimos de la otra persona en un match/chat. */
@@ -67,6 +74,14 @@ export interface Conversation {
   matchId: string;
   other: PublicUser;
   lastMessage?: Message;
+}
+
+/** Materia para el filtro de "Cercanos". */
+export interface Subject {
+  id: string;
+  name: string;
+  /** Profesores con esta materia dentro de la distancia elegida. */
+  teachersInRange: number;
 }
 
 export type ReportReason = 'spam' | 'inappropriate' | 'harassment' | 'fake_profile' | 'other';

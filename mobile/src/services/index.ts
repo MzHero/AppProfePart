@@ -1,9 +1,44 @@
 // Punto único de acceso a datos. Las pantallas importan desde acá (vía hooks),
 // nunca desde Supabase ni desde ./mock directamente.
-export { authService } from './authService';
-export type { ProfileUpdate, SignUpInput } from './authService';
-export { chatService } from './chatService';
-export { matchService } from './matchService';
-export { moderationService, REPORT_REASONS } from './moderationService';
-export { teacherService } from './teacherService';
-export type { NearbyFilters } from './teacherService';
+//
+// Si mobile/.env.local define EXPO_PUBLIC_SUPABASE_URL y EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+// se usa Supabase; si no, los datos mock en memoria.
+import { mockAuthService } from './mock/auth';
+import { mockChatService } from './mock/chat';
+import { mockMatchService } from './mock/matches';
+import { mockModerationService } from './mock/moderation';
+import { mockTeacherService } from './mock/teachers';
+import { supabaseAuthService } from './supabase/auth';
+import { supabaseChatService } from './supabase/chat';
+import { isSupabaseConfigured } from './supabase/client';
+import { supabaseMatchService } from './supabase/matches';
+import { supabaseModerationService } from './supabase/moderation';
+import { supabaseTeacherService } from './supabase/teachers';
+import type {
+  AuthService,
+  ChatService,
+  MatchService,
+  ModerationService,
+  TeacherService,
+} from './types';
+
+export const backend: 'supabase' | 'mock' = isSupabaseConfigured ? 'supabase' : 'mock';
+
+export const authService: AuthService = isSupabaseConfigured
+  ? supabaseAuthService
+  : mockAuthService;
+export const teacherService: TeacherService = isSupabaseConfigured
+  ? supabaseTeacherService
+  : mockTeacherService;
+export const matchService: MatchService = isSupabaseConfigured
+  ? supabaseMatchService
+  : mockMatchService;
+export const chatService: ChatService = isSupabaseConfigured
+  ? supabaseChatService
+  : mockChatService;
+export const moderationService: ModerationService = isSupabaseConfigured
+  ? supabaseModerationService
+  : mockModerationService;
+
+export { REPORT_REASONS } from './types';
+export type { NearbyFilters, ProfileUpdate, SignUpInput, SignUpResult } from './types';

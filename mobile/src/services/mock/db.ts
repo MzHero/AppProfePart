@@ -1,5 +1,5 @@
-// Base de datos en memoria para desarrollar el frontend sin backend.
-// Se reinicia al recargar la app. Solo los archivos de src/services/ pueden importar esto.
+// Base de datos en memoria: se usa cuando no hay Supabase configurado (ver services/index.ts).
+// Se reinicia al recargar la app. Solo los archivos de services/mock/ pueden importar esto.
 
 import type { Match, Message, TeacherProfile, User } from '@/types/models';
 
@@ -16,6 +16,14 @@ interface MockTeacher extends Omit<TeacherProfile, 'distanceKm'> {
   distanceKm: number;
 }
 
+/** Sesión mock actual (equivale a auth.uid()). */
+export const session = { userId: null as string | null };
+
+export function currentUserId(): string {
+  if (!session.userId) throw new Error('No hay sesión');
+  return session.userId;
+}
+
 const teachers: MockTeacher[] = [
   {
     id: 't1',
@@ -24,6 +32,7 @@ const teachers: MockTeacher[] = [
     subjects: ['Física I', 'Química', 'Matemática'],
     hourlyRate: 15,
     rating: 4,
+    reviewCount: 1,
     bio: 'Clases prácticas con resolución paso a paso de ejercicios.',
     cv: 'Licenciado en Ciencias Físicas (UBA). 5 años dictando clases particulares y preparación para exámenes de ingreso.',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600',
@@ -36,6 +45,7 @@ const teachers: MockTeacher[] = [
     subjects: ['Cálculo', 'Álgebra Lineal'],
     hourlyRate: 20,
     rating: 5,
+    reviewCount: 1,
     bio: 'Hago que las matemáticas difíciles se entiendan en la primera clase.',
     cv: 'Ingeniera Electrónica con posgrado en docencia universitaria.',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600',
@@ -48,6 +58,7 @@ const teachers: MockTeacher[] = [
     subjects: ['Inglés C1', 'First Certificate'],
     hourlyRate: 18,
     rating: 3,
+    reviewCount: 1,
     bio: 'Enfoque 100% conversacional e intensivo para entrevistas y exámenes.',
     cv: 'Profesor de lengua inglesa certificado por Cambridge.',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600',
@@ -77,10 +88,10 @@ const users: MockUser[] = [
     email: 'profe@particuldando.com',
     password: '123456',
     avatarUrl: teachers[0].avatarUrl,
-    age: teachers[0].age,
+    birthDate: '1998-05-20',
     bio: teachers[0].bio,
     subjects: teachers[0].subjects,
-    hourlyRate: teachers[0].hourlyRate,
+    hourlyRate: teachers[0].hourlyRate ?? undefined,
     cv: teachers[0].cv,
   },
 ];

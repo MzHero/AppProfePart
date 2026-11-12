@@ -1,8 +1,11 @@
 // Profesor: solicitudes recibidas (aceptar / rechazar).
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 
+import { MatchCelebration } from '@/components/MatchCelebration';
 import {
   EmptyState,
   ErrorState,
@@ -13,12 +16,29 @@ import {
 } from '@/components/ui';
 import { useIncomingRequests, useRespondRequest } from '@/hooks/queries';
 import { formatChatTime } from '@/lib/format';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { useAppTheme } from '@/providers/AppThemeProvider';
+import { useCurrentUser } from '@/providers/SessionProvider';
+import type { PublicUser } from '@/types/models';
 
 export default function RequestsScreen() {
   const { colors } = useAppTheme();
   const { data, isLoading, isError, refetch, isRefetching } = useIncomingRequests();
+  useRefetchOnFocus(refetch);
   const respond = useRespondRequest();
+  const me = useCurrentUser();
+  const [match, setMatch] = useState<{ matchId: string; student: PublicUser } | null>(null);
+
+  const answer = (student: PublicUser, accept: boolean) =>
+    respond.mutate(
+      { studentId: student.id, accept },
+      {
+        onSuccess: ({ matchId }) => {
+          if (accept && matchId) setMatch({ matchId, student });
+        },
+        onError: (e) => Alert.alert('No se pudo responder', e.message),
+      },
+    );
 
   return (
     <Screen>
@@ -40,7 +60,7 @@ export default function RequestsScreen() {
             />
           }
           renderItem={({ item }) => {
-            const busy = respond.isPending && respond.variables?.matchId === item.id;
+            const busy = respond.isPending && respond.variables?.studentId === item.student.id;
             return (
               <View className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3">
                 {item.student.avatarUrl ? (
@@ -61,7 +81,7 @@ export default function RequestsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Rechazar a ${item.student.name}`}
                   disabled={busy}
-                  onPress={() => respond.mutate({ matchId: item.id, accept: false })}
+                  onPress={() => answer(item.student, false)}
                   className="h-11 w-11 items-center justify-center rounded-full bg-accent-soft">
                   <X size={22} color={colors.accent} />
                 </Pressable>
@@ -69,7 +89,7 @@ export default function RequestsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Aceptar a ${item.student.name}`}
                   disabled={busy}
-                  onPress={() => respond.mutate({ matchId: item.id, accept: true })}
+                  onPress={() => answer(item.student, true)}
                   className="h-11 w-11 items-center justify-center rounded-full bg-success-soft">
                   <Check size={22} color={colors.success} />
                 </Pressable>
@@ -84,6 +104,20 @@ export default function RequestsScreen() {
           }
         />
       )}
+      {match ? (
+        <MatchCelebration
+          visible
+          me={{ name: me.name, avatarUrl: me.avatarUrl }}
+          other={{ name: match.student.name, avatarUrl: match.student.avatarUrl }}
+          subtitle={`Aceptaste a ${match.student.name}. Escribile para coordinar la primera clase.`}
+          onClose={() => setMatch(null)}
+          onChat={() => {
+            const { matchId } = match;
+            setMatch(null);
+            router.push({ pathname: '/chat/[matchId]', params: { matchId } });
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }

@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import { Button, Screen, Segmented, TextField } from '@/components/ui';
@@ -32,7 +32,15 @@ export default function RegisterScreen() {
   const onSubmit = handleSubmit(async ({ name, email, password, role }) => {
     setServerError(null);
     try {
-      await signUp({ name, email, password, role });
+      const { needsEmailConfirmation } = await signUp({ name, email, password, role });
+      // Si no hace falta confirmar, Stack.Protected redirige solo al entrar la sesión.
+      if (needsEmailConfirmation) {
+        Alert.alert(
+          'Revisá tu email',
+          `Te enviamos un enlace a ${email.trim()} para confirmar tu cuenta. Después ingresá con tu email y contraseña.`,
+          [{ text: 'Entendido', onPress: () => router.back() }],
+        );
+      }
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No se pudo crear la cuenta');
     }

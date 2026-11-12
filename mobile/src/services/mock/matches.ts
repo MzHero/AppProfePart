@@ -1,17 +1,14 @@
-// Flujo de match: el alumno da like -> 'pending' -> el profesor acepta o rechaza.
-// Si se acepta, se habilita el chat.
-
 import type { Match } from '@/types/models';
-import { authService } from './authService';
-import { db, delay, uid } from './mock/db';
+import type { MatchService } from '../types';
+import { currentUserId, db, delay, uid } from './db';
 
-export const matchService = {
-  /** Alumno da like a un profesor. Idempotente: si ya existe el match, lo devuelve. */
-  async like(teacherId: string): Promise<Match> {
+const matchListeners = new Set<() => void>();
+
+export const mockMatchService: MatchService = {
+  async like(teacherId) {
     await delay();
-    const me = authService._currentUserId();
-    const existing = db.matches.find((m) => m.student.id === me && m.teacher.id === teacherId);
-    if (existing) return existing;
+    const me = currentUserId();
+    if (db.matches.some((m) => m.student.id === me && m.teacher.id === teacherId)) return;
     const match: Match = {
       id: uid(),
       status: 'pending',
@@ -20,41 +17,45 @@ export const matchService = {
       teacher: db.publicUser(teacherId),
     };
     db.matches.push(match);
-    return match;
   },
 
-  /** Alumno descarta un profesor en el swipe. */
-  async pass(teacherId: string): Promise<void> {
+  async pass(teacherId) {
     await delay(100);
-    db.passes.push([authService._currentUserId(), teacherId]);
+    db.passes.push([currentUserId(), teacherId]);
   },
 
-  /** Profesor: solicitudes pendientes recibidas. */
-  async listIncoming(): Promise<Match[]> {
+  async listIncoming() {
     await delay();
-    const me = authService._currentUserId();
+    const me = currentUserId();
     return db.matches.filter((m) => m.teacher.id === me && m.status === 'pending');
   },
 
-  /** Alumno: solicitudes enviadas que siguen pendientes. */
-  async listOutgoingPending(): Promise<Match[]> {
+  async listOutgoingPending() {
     await delay();
-    const me = authService._currentUserId();
+    const me = currentUserId();
     return db.matches.filter((m) => m.student.id === me && m.status === 'pending');
   },
 
-  async respond(matchId: string, accept: boolean): Promise<Match> {
+  async respond(studentId, accept) {
     await delay();
-    const me = authService._currentUserId();
-    const m = db.matches.find((x) => x.id === matchId && x.teacher.id === me);
+    const me = currentUserId();
+    const m = db.matches.find(
+      (x) => x.teacher.id === me && x.student.id === studentId && x.status === 'pending',
+    );
     if (!m) throw new Error('Solicitud no encontrada');
     m.status = accept ? 'accepted' : 'rejected';
-    return m;
+    if (accept) matchListeners.forEach((l) => l());
+    return { matchId: accept ? m.id : null };
   },
 
-  async getById(matchId: string): Promise<Match> {
+  onNewMatch(callback) {
+    matchListeners.add(callback);
+    return () => matchListeners.delete(callback);
+  },
+
+  async getById(matchId) {
     await delay(150);
-    const me = authService._currentUserId();
+    const me = currentUserId();
     const m = db.matches.find(
       (x) => x.id === matchId && (x.student.id === me || x.teacher.id === me),
     );

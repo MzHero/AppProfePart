@@ -15,12 +15,14 @@ import {
 import { useConversations, useOutgoingPending } from '@/hooks/queries';
 import { formatChatTime } from '@/lib/format';
 import { useCurrentUser } from '@/providers/SessionProvider';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { useAppTheme } from '@/providers/AppThemeProvider';
 
 export default function ChatsScreen() {
   const { colors } = useAppTheme();
   const user = useCurrentUser();
   const { data, isLoading, isError, refetch, isRefetching } = useConversations();
+  useRefetchOnFocus(refetch);
 
   return (
     <Screen>

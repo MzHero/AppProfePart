@@ -1,9 +1,6 @@
-// Chat entre alumno y profesor (solo para matches aceptados).
-// En Supabase: tabla `messages` + Supabase Realtime para `subscribe`.
-
-import type { Conversation, Message } from '@/types/models';
-import { authService } from './authService';
-import { db, delay, uid } from './mock/db';
+import type { Message } from '@/types/models';
+import type { ChatService } from '../types';
+import { currentUserId, db, delay, uid } from './db';
 
 type Listener = (msg: Message) => void;
 const listeners = new Map<string, Set<Listener>>();
@@ -11,10 +8,10 @@ const listeners = new Map<string, Set<Listener>>();
 const isBlocked = (me: string, other: string) =>
   db.blocks.some(([a, b]) => (a === me && b === other) || (a === other && b === me));
 
-export const chatService = {
-  async listConversations(): Promise<Conversation[]> {
+export const mockChatService: ChatService = {
+  async listConversations() {
     await delay();
-    const me = authService._currentUserId();
+    const me = currentUserId();
     return db.matches
       .filter((m) => m.status === 'accepted' && (m.student.id === me || m.teacher.id === me))
       .map((m) => {
@@ -28,15 +25,14 @@ export const chatService = {
       );
   },
 
-  /** Mensajes de un match, del más viejo al más nuevo. */
-  async getMessages(matchId: string): Promise<Message[]> {
+  async getMessages(matchId) {
     await delay(200);
     return db.messages.filter((m) => m.matchId === matchId);
   },
 
-  async sendMessage(matchId: string, text: string): Promise<Message> {
+  async sendMessage(matchId, text) {
     await delay(150);
-    const me = authService._currentUserId();
+    const me = currentUserId();
     const match = db.matches.find((m) => m.id === matchId);
     if (!match || match.status !== 'accepted') throw new Error('El chat no está habilitado');
     const other = match.student.id === me ? match.teacher.id : match.student.id;
@@ -53,8 +49,7 @@ export const chatService = {
     return msg;
   },
 
-  /** Escucha mensajes nuevos. Devuelve la función para desuscribirse. */
-  subscribe(matchId: string, onMessage: Listener): () => void {
+  subscribe(matchId, onMessage) {
     if (!listeners.has(matchId)) listeners.set(matchId, new Set());
     listeners.get(matchId)!.add(onMessage);
     return () => listeners.get(matchId)?.delete(onMessage);

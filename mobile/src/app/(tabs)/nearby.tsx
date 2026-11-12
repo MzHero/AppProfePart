@@ -1,7 +1,7 @@
 // Búsqueda por distancia y materia. Pantalla de referencia: "Images/pantalla_por_ubi.png"
 import { router } from 'expo-router';
-import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { useDeferredValue, useState } from 'react';
+import { Search, SlidersHorizontal, X } from 'lucide-react-native';
+import { useCallback, useDeferredValue, useState } from 'react';
 import {
   FlatList,
   Pressable,
@@ -12,10 +12,12 @@ import {
   View,
 } from 'react-native';
 
+import { SubjectDropdown } from '@/components/SubjectDropdown';
 import { TeacherGridCard } from '@/components/TeacherGridCard';
 import { Chip, EmptyState, ErrorState, LoadingView, Screen } from '@/components/ui';
-import { useNearbyTeachers } from '@/hooks/queries';
-import { useCurrentLocation } from '@/hooks/useCurrentLocation';
+import { useNearbyTeachers, usePrefetchSwipeDeck, useSubjects } from '@/hooks/queries';
+import { refreshLocation, useCurrentLocation } from '@/hooks/useCurrentLocation';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { DISTANCE_FILTERS_KM, formatDistance } from '@/lib/format';
 import { useAppTheme } from '@/providers/AppThemeProvider';
 
@@ -26,12 +28,35 @@ export default function NearbyScreen() {
   );
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
+  const [subjectId, setSubjectId] = useState<string | null>(null);
+  const [subjectsOpen, setSubjectsOpen] = useState(false);
   const { coords, status: locationStatus } = useCurrentLocation();
-  const { data, isLoading, isError, refetch, isRefetching } = useNearbyTeachers({
-    maxDistanceKm,
-    query: deferredQuery,
-    coords,
-  });
+  const locating = locationStatus === 'loading';
+  const { data, isLoading, isError, refetch, isRefetching } = useNearbyTeachers(
+    { maxDistanceKm, query: deferredQuery, subjectId, coords },
+    !locating,
+  );
+  const subjects = useSubjects(maxDistanceKm, coords, !locating);
+  usePrefetchSwipeDeck(coords, !locating);
+  const refetchSubjects = subjects.refetch;
+  const selectedSubject = subjects.data?.find((s) => s.id === subjectId);
+  const pickSubject = (id: string | null) => {
+    setSubjectId(id);
+    setSubjectsOpen(false);
+  };
+  // Al volver a la pestaña: renovar la ubicación si es vieja y recargar la lista.
+  useRefetchOnFocus(
+    useCallback(() => {
+      refreshLocation();
+      refetch();
+      refetchSubjects();
+    }, [refetch, refetchSubjects]),
+  );
+  // Deslizar para actualizar: fuerza una lectura nueva de la ubicación.
+  const onPullRefresh = useCallback(async () => {
+    await refreshLocation(true);
+    refetch();
+  }, [refetch]);
 
   return (
     <Screen>
@@ -49,14 +74,23 @@ export default function NearbyScreen() {
               autoCorrect={false}
             />
           </View>
-          {/* TODO: abrir filtros avanzados (precio, rating, modalidad) */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Filtros"
-            className="h-12 w-12 items-center justify-center rounded-2xl border border-line bg-muted">
-            <SlidersHorizontal size={20} color={colors.fg} />
+            accessibilityLabel="Filtrar por materia"
+            accessibilityState={{ expanded: subjectsOpen }}
+            onPress={() => setSubjectsOpen((v) => !v)}
+            className={`h-12 w-12 items-center justify-center rounded-2xl border ${subjectId || subjectsOpen ? 'border-brand bg-brand' : 'border-line bg-muted'}`}>
+            <SlidersHorizontal size={20} color={subjectId || subjectsOpen ? '#fff' : colors.fg} />
           </Pressable>
         </View>
+        {subjectsOpen ? (
+          <SubjectDropdown
+            subjects={subjects.data}
+            isLoading={locating || subjects.isLoading}
+            selectedId={subjectId}
+            onSelect={pickSubject}
+          />
+        ) : null}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -70,14 +104,28 @@ export default function NearbyScreen() {
             />
           ))}
         </ScrollView>
-        {locationStatus === 'denied' ? (
+        {subjectId ? (
+          <View className="flex-row">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Quitar filtro de materia ${selectedSubject?.name ?? ''}`}
+              onPress={() => setSubjectId(null)}
+              className="flex-row items-center gap-1.5 rounded-full bg-brand-soft py-1.5 pl-3 pr-2">
+              <Text className="text-sm font-semibold text-brand-fg">
+                Materia: {selectedSubject?.name ?? '…'}
+              </Text>
+              <X size={16} color={colors.brandFg} />
+            </Pressable>
+          </View>
+        ) : null}
+        {locationStatus === 'denied' || locationStatus === 'error' ? (
           <Text className="text-xs text-fg-muted">
-            Sin permiso de ubicación: las distancias pueden no ser precisas.
+            Sin acceso a tu ubicación: se muestran todos los profesores, sin filtrar por distancia.
           </Text>
         ) : null}
       </View>
 
-      {isLoading ? (
+      {locating || isLoading ? (
         <LoadingView />
       ) : isError ? (
         <ErrorState onRetry={refetch} />
@@ -92,7 +140,7 @@ export default function NearbyScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={() => void refetch()}
+              onRefresh={() => void onPullRefresh()}
               tintColor={colors.brand}
             />
           }
@@ -100,6 +148,7 @@ export default function NearbyScreen() {
             item ? (
               <TeacherGridCard
                 teacher={item}
+                highlightSubject={selectedSubject?.name}
                 onPress={() => router.push({ pathname: '/teacher/[id]', params: { id: item.id } })}
               />
             ) : (
@@ -108,8 +157,12 @@ export default function NearbyScreen() {
           }
           ListEmptyComponent={
             <EmptyState
-              title="No hay profesores en este radio"
-              description="Probá ampliar la distancia o buscar otra materia."
+              title={
+                selectedSubject
+                  ? `No hay profesores de ${selectedSubject.name} en este radio`
+                  : 'No hay profesores en este radio'
+              }
+              description="Probá ampliar la distancia o elegir otra materia."
             />
           }
         />

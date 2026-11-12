@@ -7,7 +7,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { EllipsisVertical } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
-import { Bubble, GiftedChat, type IMessage } from 'react-native-gifted-chat';
+import { Bubble, GiftedChat, Send, type IMessage } from 'react-native-gifted-chat';
 
 import { ReportBlockSheet } from '@/components/ReportBlockSheet';
 import { ErrorState, LoadingView } from '@/components/ui';
@@ -91,7 +91,14 @@ export default function ChatScreen() {
             textStyle={{ left: { color: colors.fg }, right: { color: '#fff' } }}
           />
         )}
-        textInputProps={{ placeholder: 'Escribí un mensaje...' }}
+        renderSend={(props) => (
+          <Send {...props} label="Enviar" textStyle={{ color: colors.brand, fontWeight: '700' }} />
+        )}
+        textInputProps={{
+          placeholder: 'Escribí un mensaje...',
+          placeholderTextColor: colors.fgSoft,
+          style: { color: colors.fg },
+        }}
         disableKeyboardProvider
         keyboardAvoidingViewProps={{ keyboardVerticalOffset: headerHeight }}
       />
