@@ -6,9 +6,9 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 import { BrandWordmark, useLoginIntro } from '@/components/brand';
+import { KeyboardScrollView } from '@/components/KeyboardAware';
 import { Button, Screen, TextField } from '@/components/ui';
 import { loginSchema, type LoginForm } from '@/lib/schemas';
 import { useSession } from '@/providers/SessionProvider';
@@ -40,9 +40,7 @@ export default function LoginScreen() {
   return (
     <Screen edges={['top', 'bottom']}>
       <View ref={containerRef} collapsable={false} className="flex-1">
-        <KeyboardAwareScrollView
-          contentContainerClassName="flex-grow justify-center px-6 py-10"
-          keyboardShouldPersistTaps="handled">
+        <KeyboardScrollView contentClassName="flex-grow justify-center px-6 py-10">
           <View className="mb-10 items-center gap-1">
             <BrandWordmark
               pBoxRef={pBoxRef}
@@ -114,7 +112,7 @@ export default function LoginScreen() {
               ) : null}
             </View>
           </Animated.View>
-        </KeyboardAwareScrollView>
+        </KeyboardScrollView>
       </View>
     </Screen>
   );

@@ -36,3 +36,30 @@ export function displayDateToIso(display: string): string {
   const [d, m, y] = display.split('/');
   return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
+
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** "hoy a las 18:30" / "mañana a las 09:00" / "el 15 nov a las 18:30". */
+export function formatDayTime(iso: string): string {
+  const d = new Date(iso);
+  const time = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  const day = new Date(d).setHours(0, 0, 0, 0);
+  const today = new Date().setHours(0, 0, 0, 0);
+  const diffDays = Math.round((day - today) / 86_400_000);
+  if (diffDays === 0) return `hoy a las ${time}`;
+  if (diffDays === 1) return `mañana a las ${time}`;
+  if (diffDays === -1) return `ayer a las ${time}`;
+  return `el ${d.getDate()} ${MONTHS[d.getMonth()]} a las ${time}`;
+}
+
+/** "15 nov 2026" (fecha de una reseña). */
+export function formatShortDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/** 4.5 -> "4,5" (coma decimal). */
+export function formatRating(rating: number): string {
+  return rating.toFixed(1).replace('.', ',');
+}

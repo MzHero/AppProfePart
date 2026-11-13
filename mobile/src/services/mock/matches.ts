@@ -1,6 +1,7 @@
 import type { Match } from '@/types/models';
 import type { MatchService } from '../types';
 import { currentUserId, db, delay, uid } from './db';
+import { ratingSummary } from './reviews';
 
 const matchListeners = new Set<() => void>();
 
@@ -27,7 +28,16 @@ export const mockMatchService: MatchService = {
   async listIncoming() {
     await delay();
     const me = currentUserId();
-    return db.matches.filter((m) => m.teacher.id === me && m.status === 'pending');
+    return db.matches
+      .filter((m) => m.teacher.id === me && m.status === 'pending')
+      .map((m) => ({
+        ...m,
+        student: {
+          ...m.student,
+          bio: db.users.find((u) => u.id === m.student.id)?.bio ?? '',
+          ...ratingSummary(m.student.id),
+        },
+      }));
   },
 
   async listOutgoingPending() {

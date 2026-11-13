@@ -8,7 +8,10 @@ import type {
   Coords,
   Match,
   Message,
+  PublicProfile,
   ReportReason,
+  Review,
+  StudySession,
   Role,
   Subject,
   TeacherProfile,
@@ -92,6 +95,35 @@ export interface ChatService {
    * hay que recargar los mensajes, porque los enviados antes de ese momento no llegan por acá.
    */
   subscribe(matchId: string, onMessage: (msg: Message) => void, onReady?: () => void): () => void;
+}
+
+/**
+ * Sesiones de estudio de un match. Iniciar y terminar es de a dos: uno propone (o termina) y el
+ * otro acepta (o confirma). Sin respuesta, a las 24 h la propuesta se cancela y la sesión
+ * empezada se cierra sola.
+ */
+export interface SessionService {
+  /** Última sesión del match (null si nunca hubo una). */
+  getCurrent(matchId: string): Promise<StudySession | null>;
+  /** Propone iniciar una sesión: el otro la tiene que aceptar. */
+  start(matchId: string): Promise<void>;
+  /** El otro acepta la propuesta: la sesión empieza. */
+  accept(sessionId: string): Promise<void>;
+  /** Cancela una propuesta (quien la hizo) o la rechaza (el otro: "ahora no"). */
+  cancel(sessionId: string): Promise<void>;
+  /** Termina la sesión. Devuelve true si quedó cerrada (el otro ya la había terminado). */
+  end(sessionId: string): Promise<boolean>;
+  /** Cambios de las sesiones del match en tiempo real (el otro inicia, termina o confirma). */
+  subscribe(matchId: string, onChange: () => void): () => void;
+}
+
+export interface ReviewService {
+  /** Califica al otro participante de una sesión cerrada (una vez por sesión). */
+  submit(sessionId: string, rating: number, comment?: string): Promise<void>;
+  /** Reseñas que recibió un usuario (la última de cada persona). */
+  listFor(userId: string): Promise<Review[]>;
+  /** Perfil público de un alumno o profesor, con su puntaje. */
+  getProfile(userId: string): Promise<PublicProfile>;
 }
 
 export interface ModerationService {

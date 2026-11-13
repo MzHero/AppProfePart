@@ -6,6 +6,8 @@ import {
   chatService,
   matchService,
   moderationService,
+  reviewService,
+  sessionService,
   teacherService,
   type NearbyFilters,
 } from '@/services';
@@ -27,6 +29,9 @@ export const queryKeys = {
   match: (id: string) => ['matches', id] as const,
   conversations: ['conversations'] as const,
   messages: (matchId: string) => ['messages', matchId] as const,
+  session: (matchId: string) => ['sessions', matchId] as const,
+  reviews: (userId: string) => ['reviews', userId] as const,
+  profile: (userId: string) => ['profiles', userId] as const,
 };
 
 // ---------- Profesores ----------
@@ -191,6 +196,103 @@ export function useSendMessage(matchId: string) {
       );
       qc.invalidateQueries({ queryKey: queryKeys.conversations });
     },
+  });
+}
+
+// ---------- Sesiones de estudio y reseñas ----------
+
+/** Última sesión del match, actualizada en tiempo real cuando el otro la inicia o la termina. */
+export function useStudySession(matchId: string) {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: queryKeys.session(matchId),
+    queryFn: () => sessionService.getCurrent(matchId),
+  });
+
+  useEffect(
+    () =>
+      sessionService.subscribe(matchId, () =>
+        qc.invalidateQueries({ queryKey: queryKeys.session(matchId) }),
+      ),
+    [matchId, qc],
+  );
+
+  // El vencimiento (24 h) no genera ningún evento: recargar justo cuando vence.
+  const open = query.data && query.data.status !== 'closed' && query.data.status !== 'cancelled';
+  const closesAt = open ? query.data?.closesAt : undefined;
+  useEffect(() => {
+    if (!closesAt) return;
+    const ms = new Date(closesAt).getTime() - Date.now();
+    if (ms > 2_147_000_000) return; // fuera del rango de setTimeout
+    const timer = setTimeout(
+      () => qc.invalidateQueries({ queryKey: queryKeys.session(matchId) }),
+      Math.max(ms, 0) + 1000,
+    );
+    return () => clearTimeout(timer);
+  }, [closesAt, matchId, qc]);
+
+  return query;
+}
+
+export function useStartSession(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => sessionService.start(matchId),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.session(matchId) }),
+  });
+}
+
+export function useAcceptSession(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => sessionService.accept(sessionId),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.session(matchId) }),
+  });
+}
+
+export function useCancelSession(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => sessionService.cancel(sessionId),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.session(matchId) }),
+  });
+}
+
+export function useEndSession(matchId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => sessionService.end(sessionId),
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.session(matchId) }),
+  });
+}
+
+export function useSubmitReview(matchId: string, revieweeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { sessionId: string; rating: number; comment?: string }) =>
+      reviewService.submit(v.sessionId, v.rating, v.comment),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.session(matchId) });
+      qc.invalidateQueries({ queryKey: queryKeys.reviews(revieweeId) });
+      qc.invalidateQueries({ queryKey: queryKeys.profile(revieweeId) });
+      // El promedio aparece en la grilla, el mazo y las solicitudes.
+      qc.invalidateQueries({ queryKey: ['teachers'] });
+      qc.invalidateQueries({ queryKey: queryKeys.incoming });
+    },
+  });
+}
+
+export function useUserReviews(userId: string) {
+  return useQuery({
+    queryKey: queryKeys.reviews(userId),
+    queryFn: () => reviewService.listFor(userId),
+  });
+}
+
+export function usePublicProfile(userId: string) {
+  return useQuery({
+    queryKey: queryKeys.profile(userId),
+    queryFn: () => reviewService.getProfile(userId),
   });
 }
 

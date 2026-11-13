@@ -49,9 +49,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await authService.signOut();
-    queryClient.clear();
-    setUser(null);
+    try {
+      await authService.signOut();
+    } finally {
+      // Pase lo que pase con el servidor, la app vuelve al login.
+      queryClient.clear();
+      setUser(null);
+    }
   }, [queryClient]);
 
   const updateProfile = useCallback(async (changes: ProfileUpdate) => {

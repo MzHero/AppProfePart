@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { hasOffensiveLanguage, OFFENSIVE_LANGUAGE_MESSAGE } from './moderation';
+
 export const loginSchema = z.object({
   email: z.string().trim().min(1, 'Ingresá tu email').email('Email inválido'),
   password: z.string().min(1, 'Ingresá tu contraseña'),
@@ -54,3 +56,14 @@ export const profileSchema = z.object({
   cv: z.string().trim().max(1000, 'Máximo 1000 caracteres'),
 });
 export type ProfileForm = z.infer<typeof profileSchema>;
+
+/** Calificación después de una sesión de estudio. El servidor vuelve a validar el comentario. */
+export const reviewSchema = z.object({
+  rating: z.number().int().min(1, 'Elegí de 1 a 5 estrellas').max(5),
+  comment: z
+    .string()
+    .trim()
+    .max(500, 'Máximo 500 caracteres')
+    .refine((v) => !hasOffensiveLanguage(v), OFFENSIVE_LANGUAGE_MESSAGE),
+});
+export type ReviewForm = z.infer<typeof reviewSchema>;

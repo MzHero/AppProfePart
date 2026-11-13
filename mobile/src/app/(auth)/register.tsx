@@ -4,8 +4,8 @@ import { Check } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert, Pressable, Text, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
+import { KeyboardScrollView } from '@/components/KeyboardAware';
 import { Button, Screen, Segmented, TextField } from '@/components/ui';
 import { registerSchema, type RegisterForm } from '@/lib/schemas';
 import { useSession } from '@/providers/SessionProvider';
@@ -48,9 +48,7 @@ export default function RegisterScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      <KeyboardAwareScrollView
-        contentContainerClassName="gap-4 px-6 py-6"
-        keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentClassName="gap-4 px-6 py-6">
         <View className="gap-1.5">
           <Text className="text-sm font-semibold text-fg">Quiero usar Particuldando como</Text>
           <Controller
@@ -167,7 +165,7 @@ export default function RegisterScreen() {
         ) : null}
 
         <Button label="Crear cuenta" onPress={onSubmit} loading={isSubmitting} />
-      </KeyboardAwareScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 }

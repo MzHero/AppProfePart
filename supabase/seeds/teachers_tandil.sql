@@ -135,23 +135,44 @@ cross join unnest(t.subjects) as s
 join public.subjects sub on lower(sub.name) = lower(s)
 on conflict do nothing;
 
--- Reseñas variadas de los alumnos de prueba.
-insert into public.reviews (reviewer_id, teacher_id, rating, comment)
-select r.reviewer, r.teacher, r.rating, r.comment
-from (values
-  ('11111111-1111-1111-1111-111111111111'::uuid, 'cccccccc-0000-0000-0000-000000000001'::uuid, 5, 'Me salvó el parcial.'),
-  ('22222222-2222-2222-2222-222222222222'::uuid, 'cccccccc-0000-0000-0000-000000000002'::uuid, 4, null),
-  ('11111111-1111-1111-1111-111111111111'::uuid, 'cccccccc-0000-0000-0000-000000000003'::uuid, 5, 'Re clara explicando.'),
-  ('22222222-2222-2222-2222-222222222222'::uuid, 'cccccccc-0000-0000-0000-000000000004'::uuid, 4, null),
-  ('11111111-1111-1111-1111-111111111111'::uuid, 'cccccccc-0000-0000-0000-000000000005'::uuid, 3, null),
-  ('22222222-2222-2222-2222-222222222222'::uuid, 'cccccccc-0000-0000-0000-000000000006'::uuid, 5, null),
-  ('11111111-1111-1111-1111-111111111111'::uuid, 'cccccccc-0000-0000-0000-000000000007'::uuid, 4, null),
-  ('22222222-2222-2222-2222-222222222222'::uuid, 'cccccccc-0000-0000-0000-000000000008'::uuid, 3, null),
-  ('11111111-1111-1111-1111-111111111111'::uuid, 'cccccccc-0000-0000-0000-000000000009'::uuid, 5, null),
-  ('22222222-2222-2222-2222-222222222222'::uuid, 'cccccccc-0000-0000-0000-000000000010'::uuid, 4, null),
-  ('11111111-1111-1111-1111-111111111111'::uuid, 'cccccccc-0000-0000-0000-000000000011'::uuid, 4, null),
-  ('22222222-2222-2222-2222-222222222222'::uuid, 'cccccccc-0000-0000-0000-000000000012'::uuid, 3, null)
-) as r (reviewer, teacher, rating, comment)
-on conflict (reviewer_id, teacher_id) do nothing;
+-- Reseñas: Renata y Bautista (alumnos de seed.sql) ya tomaron una clase con estos profes.
+-- Una reseña necesita una sesión de estudio cerrada, y la sesión, un match (like recíproco).
+create temp table tmp_reviews (student uuid, teacher uuid, rating int, comment text);
+insert into tmp_reviews values
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 5, 'Me salvó el parcial.'),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000002', 4, null),
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000003', 5, 'Re clara explicando.'),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000004', 4, null),
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000005', 3, null),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000006', 5, null),
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000007', 4, null),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000008', 3, null),
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000009', 5, null),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000010', 4, null),
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000011', 4, null),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000012', 3, null);
+
+insert into public.swipes (swiper_id, target_id, action)
+select student, teacher, 'like' from tmp_reviews
+union all
+select teacher, student, 'like' from tmp_reviews
+on conflict do nothing;
+
+with s as (
+  insert into public.study_sessions (match_id, proposed_by, proposed_at, started_at, end_requested_by, end_requested_at, ended_at, end_reason)
+  select m.id, r.teacher, now() - interval '8 days', now() - interval '8 days' + interval '5 minutes', r.teacher,
+         now() - interval '8 days' + interval '2 hours', now() - interval '8 days' + interval '3 hours', 'both'
+  from tmp_reviews r
+  join public.matches m on m.user_one_id = least(r.student, r.teacher) and m.user_two_id = greatest(r.student, r.teacher)
+  where not exists (select 1 from public.study_sessions x where x.match_id = m.id)
+  returning id, match_id
+)
+insert into public.reviews (session_id, reviewer_id, reviewee_id, rating, comment)
+select s.id, r.student, r.teacher, r.rating, r.comment
+from s
+join public.matches m on m.id = s.match_id
+join tmp_reviews r on m.user_one_id = least(r.student, r.teacher) and m.user_two_id = greatest(r.student, r.teacher);
+
+drop table tmp_reviews;
 
 drop table tmp_tandil;

@@ -1,4 +1,5 @@
 // Traduce errores de Supabase (Auth, PostgREST, Postgres) a mensajes en español para la UI.
+import { expireSession } from './client';
 
 const AUTH_MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email o contraseña incorrectos',
@@ -29,6 +30,11 @@ interface SupabaseLikeError {
 export function toAppError(e: unknown, fallback = 'Ocurrió un error. Probá de nuevo'): Error {
   if (!e || typeof e !== 'object') return new Error(fallback);
   const err = e as SupabaseLikeError;
+  // JWT vencido o inválido (PGRST301-303): la sesión ya no sirve, se vuelve al login.
+  if (err.code && /^PGRST30[1-3]$/.test(err.code)) {
+    void expireSession();
+    return new Error(AUTH_MESSAGES.session_not_found);
+  }
   if (err.code && AUTH_MESSAGES[err.code]) return new Error(AUTH_MESSAGES[err.code]);
   // Errores lanzados con mensaje propio desde las funciones SQL (raise exception '...').
   if (err.code === 'P0001' && err.message) return new Error(err.message);

@@ -13,6 +13,9 @@ import { matchService } from '@/services';
 import type { Conversation } from '@/types/models';
 import { MatchCelebration } from './MatchCelebration';
 
+/** Identifica un match aunque su id numérico se repita (por ejemplo, después de un db reset). */
+const matchKey = (c: Conversation) => `${c.matchId}@${c.createdAt}`;
+
 export function StudentMatchWatcher() {
   const user = useCurrentUser();
   const qc = useQueryClient();
@@ -43,19 +46,19 @@ export function StudentMatchWatcher() {
   // Primera vez en este dispositivo: los matches que ya existían no se festejan.
   useEffect(() => {
     if (celebrated !== null || !conversations) return;
-    const base = conversations.map((c) => c.matchId);
+    const base = conversations.map(matchKey);
     setItem(storageKey, base).then(() => setCelebrated(base));
   }, [celebrated, conversations, storageKey]);
 
   // El primer match todavía no festejado (se muestran de a uno).
   const current: Conversation | null =
     conversations && celebrated
-      ? (conversations.find((c) => !celebrated.includes(c.matchId)) ?? null)
+      ? (conversations.find((c) => !celebrated.includes(matchKey(c))) ?? null)
       : null;
 
   const dismiss = () => {
     if (!current || !celebrated) return;
-    const next = [...celebrated, current.matchId];
+    const next = [...celebrated, matchKey(current)];
     setCelebrated(next);
     setItem(storageKey, next);
   };

@@ -32,6 +32,7 @@ export const supabaseChatService: ChatService = {
       conversationIds.set(matchId, r.conversation_id);
       return {
         matchId,
+        createdAt: r.created_at,
         other: publicUser(r.other_id, r.other_name, r.other_avatar_url, r.other_role as Role),
         lastMessage: r.last_message_id
           ? toMessage(

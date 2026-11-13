@@ -7,18 +7,24 @@ import { mockAuthService } from './mock/auth';
 import { mockChatService } from './mock/chat';
 import { mockMatchService } from './mock/matches';
 import { mockModerationService } from './mock/moderation';
+import { mockReviewService } from './mock/reviews';
+import { mockSessionService } from './mock/sessions';
 import { mockTeacherService } from './mock/teachers';
 import { supabaseAuthService } from './supabase/auth';
 import { supabaseChatService } from './supabase/chat';
 import { isSupabaseConfigured } from './supabase/client';
 import { supabaseMatchService } from './supabase/matches';
 import { supabaseModerationService } from './supabase/moderation';
+import { supabaseReviewService } from './supabase/reviews';
+import { supabaseSessionService } from './supabase/sessions';
 import { supabaseTeacherService } from './supabase/teachers';
 import type {
   AuthService,
   ChatService,
   MatchService,
   ModerationService,
+  ReviewService,
+  SessionService,
   TeacherService,
 } from './types';
 
@@ -39,6 +45,12 @@ export const chatService: ChatService = isSupabaseConfigured
 export const moderationService: ModerationService = isSupabaseConfigured
   ? supabaseModerationService
   : mockModerationService;
+export const sessionService: SessionService = isSupabaseConfigured
+  ? supabaseSessionService
+  : mockSessionService;
+export const reviewService: ReviewService = isSupabaseConfigured
+  ? supabaseReviewService
+  : mockReviewService;
 
 export { REPORT_REASONS } from './types';
 export type { NearbyFilters, ProfileUpdate, SignUpInput, SignUpResult } from './types';

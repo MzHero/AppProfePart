@@ -3,6 +3,19 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      blocked_terms: {
+        Row: {
+          term: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          term: string;
+        };
+        Update: {
+          term?: string;
+        };
+        Relationships: [];
+      };
       blocks: {
         Row: {
           blocked_id: string;
@@ -195,36 +208,36 @@ export type Database = {
           comment: string | null;
           created_at: string;
           id: number;
-          match_id: number | null;
           rating: number;
+          reviewee_id: string;
           reviewer_id: string;
-          teacher_id: string;
+          session_id: number;
         };
         ComputedFields: never;
         Insert: {
           comment?: string | null;
           created_at?: string;
           id?: never;
-          match_id?: number | null;
           rating: number;
+          reviewee_id: string;
           reviewer_id: string;
-          teacher_id: string;
+          session_id: number;
         };
         Update: {
           comment?: string | null;
           created_at?: string;
           id?: never;
-          match_id?: number | null;
           rating?: number;
+          reviewee_id?: string;
           reviewer_id?: string;
-          teacher_id?: string;
+          session_id?: number;
         };
         Relationships: [
           {
-            foreignKeyName: 'reviews_match_id_fkey';
-            columns: ['match_id'];
+            foreignKeyName: 'reviews_reviewee_id_fkey';
+            columns: ['reviewee_id'];
             isOneToOne: false;
-            referencedRelation: 'matches';
+            referencedRelation: 'users';
             referencedColumns: ['id'];
           },
           {
@@ -235,11 +248,71 @@ export type Database = {
             referencedColumns: ['id'];
           },
           {
-            foreignKeyName: 'reviews_teacher_id_fkey';
-            columns: ['teacher_id'];
+            foreignKeyName: 'reviews_session_id_fkey';
+            columns: ['session_id'];
             isOneToOne: false;
-            referencedRelation: 'teacher_profiles';
-            referencedColumns: ['user_id'];
+            referencedRelation: 'study_sessions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      study_sessions: {
+        Row: {
+          end_reason: string | null;
+          end_requested_at: string | null;
+          end_requested_by: string | null;
+          ended_at: string | null;
+          id: number;
+          match_id: number;
+          proposed_at: string;
+          proposed_by: string | null;
+          started_at: string | null;
+          study_session_deadline: string | null;
+        };
+        ComputedFields: 'study_session_deadline';
+        Insert: {
+          end_reason?: string | null;
+          end_requested_at?: string | null;
+          end_requested_by?: string | null;
+          ended_at?: string | null;
+          id?: never;
+          match_id: number;
+          proposed_at?: string;
+          proposed_by?: string | null;
+          started_at?: string | null;
+        };
+        Update: {
+          end_reason?: string | null;
+          end_requested_at?: string | null;
+          end_requested_by?: string | null;
+          ended_at?: string | null;
+          id?: never;
+          match_id?: number;
+          proposed_at?: string;
+          proposed_by?: string | null;
+          started_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'study_sessions_end_requested_by_fkey';
+            columns: ['end_requested_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'study_sessions_match_id_fkey';
+            columns: ['match_id'];
+            isOneToOne: false;
+            referencedRelation: 'matches';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'study_sessions_proposed_by_fkey';
+            columns: ['proposed_by'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
           },
         ];
       };
@@ -408,6 +481,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_study_session: { Args: { p_session_id: number }; Returns: undefined };
       available_subjects: {
         Args: { p_lat?: number; p_lng?: number; p_max_km?: number };
         Returns: {
@@ -416,8 +490,13 @@ export type Database = {
           teachers_in_range: number;
         }[];
       };
+      blocked_term_pattern: { Args: { p_term: string }; Returns: string };
       can_swipe: { Args: { p_target: string }; Returns: boolean };
+      cancel_study_session: { Args: { p_session_id: number }; Returns: undefined };
+      close_expired_study_sessions: { Args: { p_match_id: number }; Returns: undefined };
+      contains_blocked_terms: { Args: { p_text: string }; Returns: boolean };
       delete_my_account: { Args: Record<PropertyKey, never>; Returns: undefined };
+      end_study_session: { Args: { p_session_id: number }; Returns: boolean };
       get_match: {
         Args: { p_match_id: number };
         Returns: {
@@ -448,17 +527,70 @@ export type Database = {
           subjects: string[];
         }[];
       };
+      get_public_profile: {
+        Args: { p_user_id: string };
+        Returns: {
+          avatar_url: string;
+          bio: string;
+          id: string;
+          name: string;
+          rating: number;
+          review_count: number;
+          role: string;
+        }[];
+      };
+      get_study_session: {
+        Args: { p_match_id: number };
+        Returns: {
+          closes_at: string;
+          end_reason: string;
+          end_requested_at: string;
+          end_requested_by_me: boolean;
+          ended_at: string;
+          id: number;
+          proposed_at: string;
+          proposed_by_me: boolean;
+          reviewed_by_me: boolean;
+          started_at: string;
+          status: string;
+        }[];
+      };
       incoming_requests: {
         Args: Record<PropertyKey, never>;
         Returns: {
           created_at: string;
           student_avatar_url: string;
+          student_bio: string;
           student_id: string;
           student_name: string;
+          student_rating: number;
+          student_review_count: number;
         }[];
       };
       is_blocked_with: { Args: { p_other: string }; Returns: boolean };
       is_conversation_participant: { Args: { p_conversation_id: number }; Returns: boolean };
+      lock_open_study_session: {
+        Args: { p_session_id: number };
+        Returns: {
+          end_reason: string | null;
+          end_requested_at: string | null;
+          end_requested_by: string | null;
+          ended_at: string | null;
+          id: number;
+          match_id: number;
+          proposed_at: string;
+          proposed_by: string | null;
+          started_at: string | null;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'study_sessions';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      match_partner: { Args: { p_match_id: number }; Returns: string };
+      my_conversation_ids: { Args: Record<PropertyKey, never>; Returns: number[] };
       my_conversations: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -475,6 +607,7 @@ export type Database = {
           other_role: string;
         }[];
       };
+      my_match_ids: { Args: Record<PropertyKey, never>; Returns: number[] };
       my_pending_requests: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -482,6 +615,14 @@ export type Database = {
           teacher_avatar_url: string;
           teacher_id: string;
           teacher_name: string;
+        }[];
+      };
+      normalize_for_filter: { Args: { p_text: string }; Returns: string };
+      rating_summary: {
+        Args: { p_user_id: string };
+        Returns: {
+          rating: number;
+          review_count: number;
         }[];
       };
       search_teachers: {
@@ -511,11 +652,35 @@ export type Database = {
       };
       set_my_location: { Args: { p_lat: number; p_lng: number }; Returns: undefined };
       set_my_subjects: { Args: { p_names: string[] }; Returns: undefined };
+      start_study_session: { Args: { p_match_id: number }; Returns: number };
+      study_session_deadline: {
+        Args: { '': Database['public']['Tables']['study_sessions']['Row'] };
+        Returns: {
+          error: true;
+        } & 'the function public.study_session_deadline with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache';
+      };
+      submit_review: {
+        Args: { p_comment?: string; p_rating: number; p_session_id: number };
+        Returns: undefined;
+      };
       swipe: {
         Args: { p_action: string; p_target: string };
         Returns: {
           match_id: number;
           matched: boolean;
+        }[];
+      };
+      user_reviews: {
+        Args: { p_limit?: number; p_user_id: string };
+        Returns: {
+          comment: string;
+          created_at: string;
+          id: number;
+          rating: number;
+          reviewer_avatar_url: string;
+          reviewer_id: string;
+          reviewer_name: string;
+          reviewer_role: string;
         }[];
       };
     };

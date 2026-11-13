@@ -50,6 +50,59 @@ export interface PublicUser {
   name: string;
   avatarUrl?: string;
   role: Role;
+  /** Solo en solicitudes recibidas: el profesor ve el puntaje del alumno antes de aceptar. */
+  bio?: string;
+  rating?: number;
+  reviewCount?: number;
+}
+
+/** Perfil público de un alumno o profesor, con su puntaje. */
+export interface PublicProfile {
+  id: string;
+  name: string;
+  role: Role;
+  avatarUrl?: string;
+  bio: string;
+  /** Promedio 0-5 (0 = sin reseñas). Cuenta la última reseña de cada persona. */
+  rating: number;
+  reviewCount: number;
+}
+
+/** Reseña que recibió un usuario después de una sesión de estudio. */
+export interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  reviewer: PublicUser;
+}
+
+/**
+ * Sesión de estudio de un match:
+ *   proposed  -> uno la propuso, falta que el otro la acepte (o se cancela a las 24 h)
+ *   active    -> en curso
+ *   closing   -> uno la terminó, falta que el otro confirme (o que pasen 24 h)
+ *   closed    -> cerrada por los dos o por tiempo: ya se puede calificar
+ *   cancelled -> la propuesta no se aceptó (nunca empezó)
+ */
+export type StudySessionStatus = 'proposed' | 'active' | 'closing' | 'closed' | 'cancelled';
+
+export interface StudySession {
+  id: string;
+  matchId: string;
+  status: StudySessionStatus;
+  proposedByMe: boolean;
+  proposedAt: string;
+  /** Cuándo la aceptó el otro (null mientras es una propuesta). */
+  startedAt: string | null;
+  /** Quién la terminó primero (null si nadie todavía). */
+  endRequestedBy: 'me' | 'other' | null;
+  /** Límite automático: la propuesta se cancela o la sesión se cierra sola en este momento. */
+  closesAt: string;
+  endedAt: string | null;
+  /** 'both' = la cerraron los dos; 'timeout' = se cerró sola a las 24 h; 'cancelled' = no empezó. */
+  endReason: 'both' | 'timeout' | 'cancelled' | null;
+  reviewedByMe: boolean;
 }
 
 export type MatchStatus = 'pending' | 'accepted' | 'rejected';
@@ -72,6 +125,8 @@ export interface Message {
 
 export interface Conversation {
   matchId: string;
+  /** Cuándo se creó el match (ISO). */
+  createdAt: string;
   other: PublicUser;
   lastMessage?: Message;
 }

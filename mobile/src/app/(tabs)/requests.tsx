@@ -1,5 +1,4 @@
 // Profesor: solicitudes recibidas (aceptar / rechazar).
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
 import { useState } from 'react';
@@ -7,10 +6,11 @@ import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-na
 
 import { MatchCelebration } from '@/components/MatchCelebration';
 import {
+  Avatar,
   EmptyState,
   ErrorState,
-  InitialAvatar,
   LoadingView,
+  RatingSummary,
   Screen,
   ScreenTitle,
 } from '@/components/ui';
@@ -63,20 +63,26 @@ export default function RequestsScreen() {
             const busy = respond.isPending && respond.variables?.studentId === item.student.id;
             return (
               <View className="flex-row items-center gap-3 rounded-2xl border border-line bg-surface p-3">
-                {item.student.avatarUrl ? (
-                  <Image
-                    source={{ uri: item.student.avatarUrl }}
-                    style={{ width: 52, height: 52, borderRadius: 26 }}
-                  />
-                ) : (
-                  <InitialAvatar name={item.student.name} size={52} />
-                )}
-                <View className="flex-1">
-                  <Text className="text-base font-bold text-fg">{item.student.name}</Text>
-                  <Text className="text-sm text-fg-muted">
-                    Quiere tomar clases · {formatChatTime(item.createdAt)}
-                  </Text>
-                </View>
+                {/* Tocar al alumno abre su perfil con sus reseñas (antes de aceptar). */}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ver el perfil y las reseñas de ${item.student.name}`}
+                  onPress={() =>
+                    router.push({ pathname: '/user/[id]', params: { id: item.student.id } })
+                  }
+                  className="flex-1 flex-row items-center gap-3 active:opacity-70">
+                  <Avatar uri={item.student.avatarUrl} name={item.student.name} size={52} />
+                  <View className="flex-1 gap-0.5">
+                    <Text className="text-base font-bold text-fg">{item.student.name}</Text>
+                    <RatingSummary
+                      rating={item.student.rating ?? 0}
+                      reviewCount={item.student.reviewCount ?? 0}
+                    />
+                    <Text className="text-xs text-fg-soft">
+                      Quiere tomar clases · {formatChatTime(item.createdAt)} · Ver perfil
+                    </Text>
+                  </View>
+                </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Rechazar a ${item.student.name}`}

@@ -17,7 +17,7 @@ export const mockChatService: ChatService = {
       .map((m) => {
         const other = m.student.id === me ? m.teacher : m.student;
         const msgs = db.messages.filter((x) => x.matchId === m.id);
-        return { matchId: m.id, other, lastMessage: msgs[msgs.length - 1] };
+        return { matchId: m.id, createdAt: m.createdAt, other, lastMessage: msgs[msgs.length - 1] };
       })
       .filter((c) => !isBlocked(me, c.other.id))
       .sort((a, b) =>

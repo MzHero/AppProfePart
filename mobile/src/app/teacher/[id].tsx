@@ -7,7 +7,8 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ReportBlockSheet } from '@/components/ReportBlockSheet';
-import { Button, ErrorState, LoadingView, Stars, SubjectTag } from '@/components/ui';
+import { ReviewList } from '@/components/ReviewList';
+import { Button, ErrorState, LoadingView, RatingSummary, SubjectTag } from '@/components/ui';
 import { useLikeTeacher, useOutgoingPending, useTeacher } from '@/hooks/queries';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
 import { formatDistance, formatRate } from '@/lib/format';
@@ -71,7 +72,7 @@ export default function TeacherDetailScreen() {
 
         <View className="gap-5 p-5">
           <View className="gap-1">
-            <Stars rating={teacher.rating} size="md" />
+            <RatingSummary rating={teacher.rating} reviewCount={teacher.reviewCount} size="md" />
             <View className="flex-row items-baseline justify-between">
               <Text className="flex-1 text-2xl font-bold text-fg">
                 {teacher.age !== null ? `${teacher.name} (${teacher.age} años)` : teacher.name}
@@ -110,6 +111,12 @@ export default function TeacherDetailScreen() {
             <Text className="text-base font-bold text-fg">Trayectoria y CV</Text>
             <Text className="text-base leading-6 text-fg-muted">{teacher.cv}</Text>
           </View>
+
+          <ReviewList
+            userId={teacher.id}
+            rating={teacher.rating}
+            reviewCount={teacher.reviewCount}
+          />
 
           <Text className="text-xs text-fg-soft">
             El precio y el pago de las clases se acuerdan directamente con el profesor.

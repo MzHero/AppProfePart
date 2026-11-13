@@ -136,9 +136,69 @@ const messages: Message[] = [
   },
 ];
 
+export interface MockSession {
+  id: string;
+  matchId: string;
+  proposedBy: string;
+  proposedAt: string;
+  /** Cuando el otro aceptó la propuesta (null = todavía es una propuesta). */
+  startedAt: string | null;
+  endRequestedBy: string | null;
+  endRequestedAt: string | null;
+  endedAt: string | null;
+  endReason: 'both' | 'timeout' | 'cancelled' | null;
+}
+
+export interface MockReview {
+  id: string;
+  sessionId: string;
+  reviewerId: string;
+  revieweeId: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+const daysAgo = (d: number) => new Date(now - d * 86_400_000).toISOString();
+
+/** Milton y Martín ya tuvieron una clase (cerrada por los dos). */
+const sessions: MockSession[] = [
+  {
+    id: 'ses1',
+    matchId: 'm1',
+    proposedBy: 't1',
+    proposedAt: daysAgo(3),
+    startedAt: daysAgo(3),
+    endRequestedBy: 't1',
+    endRequestedAt: daysAgo(2.9),
+    endedAt: daysAgo(2.9),
+    endReason: 'both',
+  },
+];
+
+/** Las de Sofía con Lucía y Esteban son de clases anteriores (sin match en el mock). */
+const reviews: MockReview[] = [
+  { id: 'r1', sessionId: 'ses1', reviewerId: 's1', revieweeId: 't1', rating: 4, comment: 'Muy claro explicando. A veces va un poco rápido.', createdAt: daysAgo(2.8) },
+  { id: 'r2', sessionId: 'ses1', reviewerId: 't1', revieweeId: 's1', rating: 5, comment: 'Muy buena predisposición, viene con las dudas preparadas.', createdAt: daysAgo(2.8) },
+  { id: 'r3', sessionId: 'old', reviewerId: 's2', revieweeId: 't2', rating: 5, comment: 'Excelente, explica con mucha paciencia.', createdAt: daysAgo(6) },
+  { id: 'r4', sessionId: 'old', reviewerId: 't2', revieweeId: 's2', rating: 5, comment: 'Muy responsable y puntual.', createdAt: daysAgo(6) },
+  { id: 'r5', sessionId: 'old2', reviewerId: 's2', revieweeId: 't3', rating: 3, createdAt: daysAgo(10) },
+  { id: 'r6', sessionId: 'old2', reviewerId: 't3', revieweeId: 's2', rating: 4, comment: 'Buena alumna. Llegó un poco tarde a la clase.', createdAt: daysAgo(10) },
+]; // prettier-ignore
+
 /** Pares [quien bloquea, bloqueado] */
 const blocks: [string, string][] = [];
 /** Profesores descartados por cada alumno en el swipe */
 const passes: [string, string][] = [];
 
-export const db = { users, teachers, matches, messages, blocks, passes, publicUser };
+export const db = {
+  users,
+  teachers,
+  matches,
+  messages,
+  sessions,
+  reviews,
+  blocks,
+  passes,
+  publicUser,
+};

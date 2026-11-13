@@ -2,14 +2,15 @@
 // La UI usa react-native-gifted-chat; todo el acoplamiento con la librería está en este archivo.
 import 'dayjs/locale/es';
 
-import { useHeaderHeight } from 'expo-router/react-navigation';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { EllipsisVertical } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { Bubble, GiftedChat, Send, type IMessage } from 'react-native-gifted-chat';
 
+import { KeyboardAvoider } from '@/components/KeyboardAware';
 import { ReportBlockSheet } from '@/components/ReportBlockSheet';
+import { StudySessionBar } from '@/components/StudySessionBar';
 import { ErrorState, LoadingView } from '@/components/ui';
 import { useMatch, useMessages, useSendMessage } from '@/hooks/queries';
 import { useCurrentUser } from '@/providers/SessionProvider';
@@ -28,7 +29,6 @@ export default function ChatScreen() {
   const { colors, scheme } = useAppTheme();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const user = useCurrentUser();
-  const headerHeight = useHeaderHeight();
   const match = useMatch(matchId);
   const messages = useMessages(matchId);
   const send = useSendMessage(matchId);
@@ -53,7 +53,20 @@ export default function ChatScreen() {
     <View className="flex-1 bg-background">
       <Stack.Screen
         options={{
-          title: other.name,
+          // Tocar el nombre abre el perfil del otro (con sus reseñas).
+          headerTitle: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Ver el perfil de ${other.name}`}
+              hitSlop={8}
+              onPress={() =>
+                other.role === 'teacher'
+                  ? router.push({ pathname: '/teacher/[id]', params: { id: other.id } })
+                  : router.push({ pathname: '/user/[id]', params: { id: other.id } })
+              }>
+              <Text className="text-lg font-bold text-fg">{other.name}</Text>
+            </Pressable>
+          ),
           headerRight: () => (
             <Pressable
               onPress={() => setSheetOpen(true)}
@@ -64,44 +77,53 @@ export default function ChatScreen() {
           ),
         }}
       />
-      <GiftedChat
-        messages={giftedMessages}
-        user={{ _id: user.id }}
-        onSend={(msgs) =>
-          msgs.forEach((m) =>
-            send.mutate(m.text, { onError: (e) => Alert.alert('No se envió', e.message) }),
-          )
-        }
-        locale="es"
-        dateFormat="D [de] MMMM"
-        dateFormatCalendar={{
-          sameDay: '[Hoy]',
-          lastDay: '[Ayer]',
-          lastWeek: 'dddd',
-          sameElse: 'D [de] MMMM',
-        }}
-        colorScheme={scheme}
-        renderBubble={(props) => (
-          <Bubble
-            {...props}
-            wrapperStyle={{
-              left: { backgroundColor: colors.surface },
-              right: { backgroundColor: colors.brand },
-            }}
-            textStyle={{ left: { color: colors.fg }, right: { color: '#fff' } }}
-          />
-        )}
-        renderSend={(props) => (
-          <Send {...props} label="Enviar" textStyle={{ color: colors.brand, fontWeight: '700' }} />
-        )}
-        textInputProps={{
-          placeholder: 'Escribí un mensaje...',
-          placeholderTextColor: colors.fgSoft,
-          style: { color: colors.fg },
-        }}
-        disableKeyboardProvider
-        keyboardAvoidingViewProps={{ keyboardVerticalOffset: headerHeight }}
-      />
+      {/* El teclado lo maneja KeyboardAvoider (funciona en Expo Go); el de gifted-chat usa
+          react-native-keyboard-controller y se desactiva. */}
+      <KeyboardAvoider>
+        <StudySessionBar matchId={matchId} other={other} />
+        <GiftedChat
+          messages={giftedMessages}
+          user={{ _id: user.id }}
+          onSend={(msgs) =>
+            msgs.forEach((m) =>
+              send.mutate(m.text, { onError: (e) => Alert.alert('No se envió', e.message) }),
+            )
+          }
+          locale="es"
+          dateFormat="D [de] MMMM"
+          dateFormatCalendar={{
+            sameDay: '[Hoy]',
+            lastDay: '[Ayer]',
+            lastWeek: 'dddd',
+            sameElse: 'D [de] MMMM',
+          }}
+          colorScheme={scheme}
+          renderBubble={(props) => (
+            <Bubble
+              {...props}
+              wrapperStyle={{
+                left: { backgroundColor: colors.surface },
+                right: { backgroundColor: colors.brand },
+              }}
+              textStyle={{ left: { color: colors.fg }, right: { color: '#fff' } }}
+            />
+          )}
+          renderSend={(props) => (
+            <Send
+              {...props}
+              label="Enviar"
+              textStyle={{ color: colors.brand, fontWeight: '700' }}
+            />
+          )}
+          textInputProps={{
+            placeholder: 'Escribí un mensaje...',
+            placeholderTextColor: colors.fgSoft,
+            style: { color: colors.fg },
+          }}
+          disableKeyboardProvider
+          keyboardAvoidingViewProps={{ enabled: false }}
+        />
+      </KeyboardAvoider>
       <ReportBlockSheet
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}

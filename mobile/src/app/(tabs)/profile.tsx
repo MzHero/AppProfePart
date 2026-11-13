@@ -1,11 +1,20 @@
 // Perfil propio: editar, legales, cerrar sesión y eliminar cuenta (requisito de Apple).
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
-import { ChevronRight, FileText, LogOut, Pencil, Shield, Trash2 } from 'lucide-react-native';
+import {
+  ChevronRight,
+  FileText,
+  LogOut,
+  Pencil,
+  RotateCcw,
+  Shield,
+  Trash2,
+} from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { InitialAvatar, Screen, Segmented, SubjectTag } from '@/components/ui';
+import { clearLocalFlags } from '@/lib/storage';
 import { useAppTheme, type ThemePreference } from '@/providers/AppThemeProvider';
 import { useCurrentUser, useSession } from '@/providers/SessionProvider';
 
@@ -103,6 +112,25 @@ export default function ProfileScreen() {
             last
           />
         </View>
+
+        {/* Solo en desarrollo: para volver a probar el aviso de Descubrir y las animaciones de
+            match después de un `supabase db reset`. No aparece en la app publicada. */}
+        {__DEV__ ? (
+          <View className="overflow-hidden rounded-3xl border border-dashed border-line-brand bg-surface">
+            <Text className="px-4 pt-3 text-xs font-semibold uppercase tracking-wide text-fg-soft">
+              Desarrollo
+            </Text>
+            <Row
+              icon={<RotateCcw size={20} color={colors.brand} />}
+              label="Reiniciar avisos y animaciones"
+              onPress={async () => {
+                await clearLocalFlags();
+                await signOut();
+              }}
+              last
+            />
+          </View>
+        ) : null}
       </ScrollView>
     </Screen>
   );

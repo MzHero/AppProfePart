@@ -71,6 +71,7 @@ function AppStack({ hasUser }: { hasUser: boolean }) {
       <Stack.Protected guard={hasUser}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="teacher/[id]" options={{ headerShown: true, title: 'Perfil' }} />
+        <Stack.Screen name="user/[id]" options={{ headerShown: true, title: 'Perfil' }} />
         <Stack.Screen name="chat/[matchId]" options={{ headerShown: true, title: '' }} />
         <Stack.Screen
           name="profile/edit"

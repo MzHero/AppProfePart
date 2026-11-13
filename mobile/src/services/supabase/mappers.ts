@@ -2,7 +2,16 @@
 // Nota: los tipos generados marcan como no nulas las columnas que devuelven las funciones,
 // aunque pueden venir null (age, hourly_rate, distance_km...). Acá se normalizan.
 
-import type { Message, PublicUser, Role, TeacherProfile, User } from '@/types/models';
+import type {
+  Message,
+  PublicProfile,
+  PublicUser,
+  Review,
+  Role,
+  StudySession,
+  TeacherProfile,
+  User,
+} from '@/types/models';
 import type { Database } from './database.types';
 
 type Fn = Database['public']['Functions'];
@@ -67,5 +76,51 @@ export function toMessage(
     senderId: r.sender_id,
     text: r.body,
     createdAt: r.sent_at,
+  };
+}
+
+export function toStudySession(row: Row<'get_study_session'>, matchId: string): StudySession {
+  const r = row as Nullable<Row<'get_study_session'>>;
+  return {
+    id: String(r.id),
+    matchId,
+    status: (r.status ?? 'closed') as StudySession['status'],
+    proposedByMe: Boolean(r.proposed_by_me),
+    proposedAt: r.proposed_at ?? '',
+    startedAt: orNull(r.started_at),
+    endRequestedBy: r.end_requested_by_me === null ? null : r.end_requested_by_me ? 'me' : 'other',
+    closesAt: r.closes_at ?? '',
+    endedAt: orNull(r.ended_at),
+    endReason: orNull(r.end_reason) as StudySession['endReason'],
+    reviewedByMe: Boolean(r.reviewed_by_me),
+  };
+}
+
+export function toReview(row: Row<'user_reviews'>): Review {
+  const r = row as Nullable<Row<'user_reviews'>>;
+  return {
+    id: String(r.id),
+    rating: r.rating ?? 0,
+    comment: orUndef(r.comment),
+    createdAt: r.created_at ?? '',
+    reviewer: publicUser(
+      r.reviewer_id ?? '',
+      r.reviewer_name ?? '',
+      r.reviewer_avatar_url,
+      r.reviewer_role as Role,
+    ),
+  };
+}
+
+export function toPublicProfile(row: Row<'get_public_profile'>): PublicProfile {
+  const r = row as Nullable<Row<'get_public_profile'>>;
+  return {
+    id: r.id ?? '',
+    name: r.name ?? '',
+    role: r.role as Role,
+    avatarUrl: orUndef(r.avatar_url),
+    bio: r.bio ?? '',
+    rating: Number(r.rating ?? 0),
+    reviewCount: r.review_count ?? 0,
   };
 }

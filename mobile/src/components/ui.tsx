@@ -1,4 +1,5 @@
 // Componentes base de la interfaz. Estilos con NativeWind (className).
+import { Image } from 'expo-image';
 import { MapPin } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import {
@@ -11,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { formatDistance } from '@/lib/format';
+import { formatDistance, formatRating } from '@/lib/format';
 import { useAppTheme } from '@/providers/AppThemeProvider';
 
 // ---------- Layout ----------
@@ -196,7 +197,10 @@ export function Segmented<T extends string>({
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             onPress={() => onChange(o.value)}
-            className={`flex-1 items-center rounded-xl py-3 ${active ? 'bg-surface shadow-sm' : ''}`}>
+            // 'shadow-none' (y no nada) en la opción inactiva: las clases de sombra definen variables
+            // CSS, y si aparecen recién al tocar, NativeWind remonta el componente y en desarrollo
+            // crashea ("Couldn't find a LinkingContext context").
+            className={`flex-1 items-center rounded-xl py-3 ${active ? 'bg-surface shadow-sm' : 'shadow-none'}`}>
             <Text className={`font-semibold ${active ? 'text-brand-fg' : 'text-fg-muted'}`}>
               {o.label}
             </Text>
@@ -268,6 +272,38 @@ export function InitialAvatar({ name, size = 56 }: { name: string; size?: number
       style={{ width: size, height: size }}>
       <Text className="font-bold text-brand-fg" style={{ fontSize: size * 0.36 }}>
         {name.charAt(0).toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
+/** Foto de perfil circular, o la inicial si no tiene. */
+export function Avatar({ uri, name, size = 56 }: { uri?: string; name: string; size?: number }) {
+  return uri ? (
+    <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} />
+  ) : (
+    <InitialAvatar name={name} size={size} />
+  );
+}
+
+/** Estrellas + "4,5 · 3 reseñas" (o "Sin reseñas todavía"). */
+export function RatingSummary({
+  rating,
+  reviewCount,
+  size = 'sm',
+}: {
+  rating: number;
+  reviewCount: number;
+  size?: 'sm' | 'md';
+}) {
+  if (reviewCount === 0) {
+    return <Text className="text-sm text-fg-soft">Sin reseñas todavía</Text>;
+  }
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <Stars rating={rating} size={size} />
+      <Text className="text-sm text-fg-muted">
+        {formatRating(rating)} · {reviewCount} {reviewCount === 1 ? 'reseña' : 'reseñas'}
       </Text>
     </View>
   );

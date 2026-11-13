@@ -6,6 +6,8 @@
 --   profe@particuldando.com    Martín Benítez (profesor)
 --   lucia@particuldando.com    Lucía Fernández (profesora)
 --   esteban@particuldando.com  Esteban Rojas (profesor)
+--   renata@ / bautista@       Renata y Bautista (alumnos): ya tomaron clase con los profes de
+--                              seeds/*.sql y les dejaron reseñas (no hace falta usarlos)
 --
 -- Los profesores están a ~45/95/190 m al norte del Obelisco (-34.6037, -58.3816), dentro de los filtros 50/100/200 m.
 -- Más profesores a otras distancias: seeds/teachers_distances.sql
@@ -23,7 +25,11 @@ with seed (id, email, meta) as (
     ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2'::uuid, 'lucia@particuldando.com',
      '{"name": "Lucía Fernández", "role": "teacher", "birth_date": "1994-01-11"}'::jsonb),
     ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3'::uuid, 'esteban@particuldando.com',
-     '{"name": "Esteban Rojas", "role": "teacher", "birth_date": "2001-09-30"}'::jsonb)
+     '{"name": "Esteban Rojas", "role": "teacher", "birth_date": "2001-09-30"}'::jsonb),
+    ('dddddddd-0000-0000-0000-000000000001'::uuid, 'renata@particuldando.com',
+     '{"name": "Renata Ruiz", "role": "student", "birth_date": "2004-06-21"}'::jsonb),
+    ('dddddddd-0000-0000-0000-000000000002'::uuid, 'bautista@particuldando.com',
+     '{"name": "Bautista Herrera", "role": "student", "birth_date": "2003-11-05"}'::jsonb)
 ),
 new_users as (
   insert into auth.users (
@@ -106,8 +112,50 @@ from public.conversations c
 join public.matches m on m.id = c.match_id
 where m.user_one_id = least('11111111-1111-1111-1111-111111111111'::uuid, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1'::uuid);
 
--- Reseñas (para las estrellas).
-insert into public.reviews (reviewer_id, teacher_id, rating, comment) values
-  ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 4, 'Muy claro explicando.'),
-  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 5, 'Excelente.'),
-  ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', 3, null);
+-- Sofía también tomó clases con Lucía y Esteban (matches viejos, para que tenga reseñas:
+-- Martín las ve antes de aceptar su solicitud).
+insert into public.swipes (swiper_id, target_id, action) values
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 'like'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', '22222222-2222-2222-2222-222222222222', 'like'),
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', 'like'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', '22222222-2222-2222-2222-222222222222', 'like');
+
+-- Sesiones de estudio ya cerradas por los dos, con reseñas en ambos sentidos.
+create temp table seed_reviews (
+  student uuid, teacher uuid, days_ago int,
+  student_rating int, student_comment text,  -- alumno -> profesor
+  teacher_rating int, teacher_comment text   -- profesor -> alumno
+);
+insert into seed_reviews values
+  ('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 3,
+   4, 'Muy claro explicando. A veces va un poco rápido.',
+   5, 'Muy buena predisposición, viene con las dudas preparadas.'),
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 6,
+   5, 'Excelente, explica con mucha paciencia.',
+   5, 'Muy responsable y puntual.'),
+  ('22222222-2222-2222-2222-222222222222', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa3', 10,
+   3, null,
+   4, 'Buena alumna. Llegó un poco tarde a la clase.');
+
+with s as (
+  insert into public.study_sessions (match_id, proposed_by, proposed_at, started_at, end_requested_by, end_requested_at, ended_at, end_reason)
+  select m.id, r.teacher,
+         now() - make_interval(days => r.days_ago),
+         now() - make_interval(days => r.days_ago) + interval '5 minutes',
+         r.teacher, now() - make_interval(days => r.days_ago) + interval '2 hours',
+         now() - make_interval(days => r.days_ago) + interval '2 hours 5 minutes', 'both'
+  from seed_reviews r
+  join public.matches m on m.user_one_id = least(r.student, r.teacher) and m.user_two_id = greatest(r.student, r.teacher)
+  returning id, match_id, ended_at
+)
+insert into public.reviews (session_id, reviewer_id, reviewee_id, rating, comment, created_at)
+select s.id, x.reviewer, x.reviewee, x.rating, x.comment, s.ended_at + interval '1 hour'
+from s
+join public.matches m on m.id = s.match_id
+join seed_reviews r on least(r.student, r.teacher) = m.user_one_id and greatest(r.student, r.teacher) = m.user_two_id
+cross join lateral (values
+  (r.student, r.teacher, r.student_rating, r.student_comment),
+  (r.teacher, r.student, r.teacher_rating, r.teacher_comment)
+) as x (reviewer, reviewee, rating, comment);
+
+drop table seed_reviews;

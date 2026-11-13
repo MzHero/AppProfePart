@@ -6,9 +6,9 @@ import { Camera, MapPin } from 'lucide-react-native';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert, Pressable, Text, View } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { KeyboardScrollView } from '@/components/KeyboardAware';
 import { Button, InitialAvatar, TextField } from '@/components/ui';
 import { useUpdateMyLocation } from '@/hooks/queries';
 import { useCurrentLocation } from '@/hooks/useCurrentLocation';
@@ -92,11 +92,10 @@ export default function EditProfileScreen() {
   });
 
   return (
-    <KeyboardAwareScrollView
+    <KeyboardScrollView
       className="flex-1 bg-background"
-      contentContainerClassName="gap-4 p-5"
-      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
-      keyboardShouldPersistTaps="handled">
+      contentClassName="gap-4 p-5"
+      contentStyle={{ paddingBottom: insets.bottom + 24 }}>
       <Pressable
         onPress={pickPhoto}
         accessibilityRole="button"
@@ -232,6 +231,6 @@ export default function EditProfileScreen() {
       ) : null}
 
       <Button label="Guardar" variant="brand" onPress={onSubmit} loading={isSubmitting} />
-    </KeyboardAwareScrollView>
+    </KeyboardScrollView>
   );
 }

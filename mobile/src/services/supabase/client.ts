@@ -42,6 +42,21 @@ export function supabase(): SupabaseClient<Database> {
   return client;
 }
 
+/**
+ * La sesión ya no sirve (token vencido o inválido, por ejemplo después de un db reset, o si no
+ * se pudo renovar sin conexión): se borra en el dispositivo y la app vuelve al login.
+ */
+let expiring = false;
+export async function expireSession(): Promise<void> {
+  if (expiring || !client) return;
+  expiring = true;
+  try {
+    await client.auth.signOut({ scope: 'local' });
+  } finally {
+    expiring = false;
+  }
+}
+
 /** id del usuario con sesión (auth.uid()). */
 export async function requireUserId(): Promise<string> {
   const { data } = await supabase().auth.getSession();

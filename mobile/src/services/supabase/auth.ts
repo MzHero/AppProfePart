@@ -84,9 +84,11 @@ export const supabaseAuthService: AuthService = {
   },
 
   async signOut() {
-    const { error } = await supabase().auth.signOut();
     cachedProfile = null;
-    if (error) throw toAppError(error);
+    const { error } = await supabase().auth.signOut();
+    // Si el servidor ya no tiene la sesión (vencida, o se reseteó la base) responde 401/403/404.
+    // Para el usuario eso igual es "cerrar sesión": se borra la sesión local y listo.
+    if (error) await supabase().auth.signOut({ scope: 'local' });
   },
 
   async updateProfile(changes) {

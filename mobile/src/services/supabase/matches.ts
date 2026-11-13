@@ -35,7 +35,12 @@ export const supabaseMatchService: MatchService = {
       id: `request-${r.student_id}`,
       status: 'pending',
       createdAt: r.created_at,
-      student: publicUser(r.student_id, r.student_name, r.student_avatar_url, 'student'),
+      student: {
+        ...publicUser(r.student_id, r.student_name, r.student_avatar_url, 'student'),
+        bio: r.student_bio ?? '',
+        rating: Number(r.student_rating ?? 0),
+        reviewCount: r.student_review_count ?? 0,
+      },
       teacher,
     }));
   },
